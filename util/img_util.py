@@ -1,7 +1,14 @@
+
 import random
-
+import os
 import cv2
+import numpy as np
 
+import inpaint_util
+
+from feature_B import measure_streaks
+
+results = [] 
 
 def readImageFile(file_path):
     # read image as an 8-bit array
@@ -37,9 +44,9 @@ class ImageDataLoader:
         self.directory = directory
         self.shuffle = shuffle
         self.transform = transform
-
-        # get a sorted list of all files in the directory
-        # fill in with your own code below
+        i= 1179
+   
+        self.file_list= sorted([os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', 'jpeg', '.bmp', '.tiff'))])
 
         if not self.file_list:
             raise ValueError("No image files found in the directory.")
@@ -55,5 +62,30 @@ class ImageDataLoader:
         return self.num_batches
 
     def __iter__(self):
-        # fill in with your own code below
-        pass
+        #Iterating throught all the images and applying transformations if necessesary"
+        for filename in self.file_list:
+            img_rgb, img_gray = readImageFile(filename)
+            # blackhat, tresh, img_out = inpaint_util.removeHair(img_rgb, img_gray)
+
+            # #Save the new images on a different folder/path 
+            # dir_path = os.path.dirname(filename)
+            # new_dir = os.path.join(dir_path, "New")
+            # os.makedirs(new_dir, exist_ok=True)
+            # saveImageFile(img_out, os.path.join(new_dir, os.path.basename(filename)))
+
+            irr = measure_streaks(img_rgb)
+
+            yield img_rgb, img_gray, filename, irr
+
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
+relative_path_to_data = os.path.join(current_directory, '../data')
+data_folder_path = os.path.normpath(relative_path_to_data)
+
+loader = ImageDataLoader(data_folder_path)
+
+for rgb, gray, fname, irr in loader:                
+    print(f"{fname:25s}  Irregularity = {irr:.4f}")
+ 
+
+
