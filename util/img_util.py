@@ -6,7 +6,7 @@ import numpy as np
 
 import inpaint_util
 
-from feature_B import measure_streaks
+from feature_B import border
 
 results = [] 
 
@@ -61,21 +61,21 @@ class ImageDataLoader:
     def __len__(self):
         return self.num_batches
 
-    def __iter__(self):
-        #Iterating throught all the images and applying transformations if necessesary"
-        for filename in self.file_list:
-            img_rgb, img_gray = readImageFile(filename)
-            # blackhat, tresh, img_out = inpaint_util.removeHair(img_rgb, img_gray)
+    # def __iter__(self):
+    #     #Iterating throught all the images and applying transformations if necessesary"
+    #     for filename in self.file_list:
+    #         img_rgb, img_gray = readImageFile(filename)
+    #         # blackhat, tresh, img_out = inpaint_util.removeHair(img_rgb, img_gray)
 
-            # #Save the new images on a different folder/path 
-            # dir_path = os.path.dirname(filename)
-            # new_dir = os.path.join(dir_path, "New")
-            # os.makedirs(new_dir, exist_ok=True)
-            # saveImageFile(img_out, os.path.join(new_dir, os.path.basename(filename)))
+    #         # #Save the new images on a different folder/path 
+    #         # dir_path = os.path.dirname(filename)
+    #         # new_dir = os.path.join(dir_path, "New")
+    #         # os.makedirs(new_dir, exist_ok=True)
+    #         # saveImageFile(img_out, os.path.join(new_dir, os.path.basename(filename)))
 
-            irr = measure_streaks(img_rgb)
+    #         irr = border(img_rgb)
 
-            yield img_rgb, img_gray, filename, irr
+    #         yield img_rgb, img_gray, filename, irr
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))

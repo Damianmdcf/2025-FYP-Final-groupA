@@ -2,18 +2,18 @@ import os
 import cv2
 import numpy as np
 
-def measure_streaks(image):
-   
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-    print(thresh)
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    print(contours[0])
+def border(mask):
+    #Scans binary mask and returns outlines of every "white" region
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
 
-    lesion_area = cv2.contourArea(contours[0])
-    border_perimeter = cv2.arcLength(contours[0], True)
-    print(lesion_area)
-    print(border_perimeter)
+    #Calculagtes the area of every region and returns the biggest one, in this case our legion 
+    lesion_contour= max(contours, key= cv2.contourArea) 
+
+    lesion_area = cv2.contourArea(lesion_contour)
+
+    # True tells OpenCV the contour is closed, so it adds the distance between the last and first point.
+    border_perimeter = cv2.arcLength(lesion_contour, True) 
+
     if lesion_area == 0:
         irregularity = 0
     else:
