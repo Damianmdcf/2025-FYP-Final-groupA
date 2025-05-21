@@ -8,8 +8,9 @@ load_dotenv()
 
 images_path = os.getenv("IMAGE_DATA_URL_LOCAL")
 
-import inpaint_util
-
+from inpaint_util import removeHair
+from feature_A import get_asymmetry
+from feature_B import get_compactness
 from feature_B import border
 
 results = [] 
@@ -48,7 +49,7 @@ class ImageDataLoader:
         self.directory = directory
         self.shuffle = shuffle
         self.transform = transform
-   
+
         self.file_list= sorted([os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', 'jpeg', '.bmp', '.tiff'))])
 
         if not self.file_list:
@@ -68,27 +69,35 @@ class ImageDataLoader:
         #Iterating throught all the images and applying transformations if necessesary"
         for filename in self.file_list:
             img_rgb, img_gray = readImageFile(filename)
-            # blackhat, tresh, img_out = inpaint_util.removeHair(img_rgb, img_gray)
+            blackhat, tresh, img_hairless = removeHair(img_rgb, img_gray)
 
-            # #Save the new images on a different folder/path 
-            # dir_path = os.path.dirname(filename)
-            # new_dir = os.path.join(dir_path, "New")
-            # os.makedirs(new_dir, exist_ok=True)
-            # saveImageFile(img_out, os.path.join(new_dir, os.path.basename(filename)))
+            #Save the new images on a different folder/path 
+            dir_path = os.path.dirname(filename)
+            new_dir = os.path.join(dir_path, "New")
+            os.makedirs(new_dir, exist_ok=True)
+            saveImageFile(img_hairless, os.path.join(new_dir, os.path.basename(filename)))
 
-            irr = border(img_rgb)
+            # Get the mask
+            img_mask_hairless = mask(img_hairless, threshold=25)
 
-            yield img_rgb, img_gray, filename, irr
+            # Compute the features
+            assymetry = get_asymmetry(img_mask_hairless)
+            # compactness = get_compactness(img_mask_hairless)
+            _border = border(tresh)
+
+            yield img_rgb, img_gray, filename, assymetry, compactness, _border
+            # yield img_rgb, img_gray, filename, compactness, _border
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 relative_path_to_data = os.path.join(current_directory, images_path)
 data_folder_path = os.path.normpath(relative_path_to_data)
 
-loader = ImageDataLoader(data_folder_path)
+loader = ImageDataLoader(images_path)
 
-for rgb, gray, filename, irr in loader:                
-    print(f"{filename:25s}  Irregularity = {irr:.4f}")
- 
-
-
+i = 0
+for img_rgb, img_gray, filename, assymetry, compactness, _border in loader:                
+    print(f"{filename:25s}  Assymetry = {assymetry:.4f}  Compactness = {compactness:.4f}   Border = {_border:.4f}")
+    i += 1
+    if i == 4:
+        break
