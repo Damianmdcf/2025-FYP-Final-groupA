@@ -3,10 +3,14 @@ import random
 import os
 import cv2
 import numpy as np
+from dotenv import load_dotenv
+load_dotenv()
+
+images_path = os.getenv("IMAGE_DATA_URL_LOCAL")
 
 import inpaint_util
 
-from feature_B import measure_streaks
+from feature_B import border
 
 results = [] 
 
@@ -44,7 +48,6 @@ class ImageDataLoader:
         self.directory = directory
         self.shuffle = shuffle
         self.transform = transform
-        i= 1179
    
         self.file_list= sorted([os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', 'jpeg', '.bmp', '.tiff'))])
 
@@ -73,19 +76,19 @@ class ImageDataLoader:
             # os.makedirs(new_dir, exist_ok=True)
             # saveImageFile(img_out, os.path.join(new_dir, os.path.basename(filename)))
 
-            irr = measure_streaks(img_rgb)
+            irr = border(img_rgb)
 
             yield img_rgb, img_gray, filename, irr
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
-relative_path_to_data = os.path.join(current_directory, '../data')
+relative_path_to_data = os.path.join(current_directory, images_path)
 data_folder_path = os.path.normpath(relative_path_to_data)
 
 loader = ImageDataLoader(data_folder_path)
 
-for rgb, gray, fname, irr in loader:                
-    print(f"{fname:25s}  Irregularity = {irr:.4f}")
+for rgb, gray, filename, irr in loader:                
+    print(f"{filename:25s}  Irregularity = {irr:.4f}")
  
 
 
