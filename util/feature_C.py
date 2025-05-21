@@ -9,15 +9,15 @@ from statistics import variance
 
 # Function to measure color irregularity
 
-def get_irregularity_score(image, mask):
-    # Change image from BGR to RGB
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+def get_irregularity_score(image_rgb, mask):
+    # Change image from BGR to RGB, update: already included in DataLoader
+    #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     # Get the segmented picture
-    slic_segments = slic_segmentation(image, mask)
+    slic_segments = slic_segmentation(image_rgb, mask)
 
     # Value was not included, as its strongly related to the light in which the photo was taken
-    hue_var, sat_var = hsv_variance(image, slic_segments)
+    hue_var, sat_var = hsv_variance(image_rgb, slic_segments)
 
     # Combined mean of the hue and saturation variance
     irregularity_score = 0.5 * hue_var + 0.5 * sat_var
