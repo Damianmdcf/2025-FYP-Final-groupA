@@ -3,7 +3,11 @@ import cv2
 import numpy as np
 from skimage import morphology
 
-def border(mask):
+
+# Damian: the border fuction seems to be more accurate when calculating the perimeter of the picture to to its contour points method instead
+# instead of the staircase method, it also ignores other blobs
+
+def getborder(mask):
     
     #Scans binary mask and returns outlines of every "white" region
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
@@ -20,16 +24,14 @@ def border(mask):
         irregularity = 0
     else:
         irregularity = (border_perimeter ** 2) / (4 * np.pi * lesion_area)
-    
-    # plt.imshow(mask, cmap="gray", interpolation="nearest")
-    # plt.axis("off")
-    # plt.show()
 
     return irregularity
 
 # Philip: This is an alternative to the function above. They both output compactness, but using two different approaches.
 # I have compared both and their outputs are similar except that measure_streaks() sometimes wrongly outputs 0, so there
 # maybe is some bug the code.
+
+#Missing division by 0 guard 
 def get_compactness(mask):
     # Calculate area by summing over the white pixels in the binarized mask
     area = np.sum(mask)
