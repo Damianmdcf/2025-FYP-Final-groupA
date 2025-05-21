@@ -3,6 +3,10 @@ import random
 import os
 import cv2
 import numpy as np
+from dotenv import load_dotenv
+load_dotenv()
+
+images_path = os.getenv("IMAGE_DATA_URL_LOCAL")
 
 import inpaint_util
 
@@ -79,7 +83,7 @@ class ImageDataLoader:
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
-relative_path_to_data = os.path.join(current_directory, '../data')
+relative_path_to_data = os.path.join(current_directory, images_path)
 data_folder_path = os.path.normpath(relative_path_to_data)
 
 loader = ImageDataLoader(data_folder_path)
