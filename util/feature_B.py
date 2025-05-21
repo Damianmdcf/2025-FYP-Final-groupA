@@ -25,6 +25,7 @@ def getborder(mask):
     else:
         irregularity = (border_perimeter ** 2) / (4 * np.pi * lesion_area)
 
+
     return irregularity
 
 # Philip: This is an alternative to the function above. They both output compactness, but using two different approaches.

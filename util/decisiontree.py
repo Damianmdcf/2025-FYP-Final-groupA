@@ -4,24 +4,24 @@ from sklearn.tree import DecisionTreeClassifier, export_text
 
 def decision_tree(filepath, feature_version):
     if filepath.lower().endswith((".xls", ".xlsx")):
-        df = pd.read_excel(filepath)                   # Excel case
+        df = pd.read_excel(filepath)                   
     else:
-        df = pd.read_csv(filepath)                     # CSV case
+        df = pd.read_csv(filepath)                     
 
     # pick feature columns                          
     feat_cols = feat_cols = [
     "feature A " + feature_version,   # → "feature A (v1)"
     "feature B " + feature_version,   # → "feature B (v1)"
     "feature C " + feature_version]   # → "feature C (v1)"
-    X = df[feat_cols]                              # feature matrix
-    y = df["Label: Is cancer"]                    # target labels
+    X = df[feat_cols]                              
+    y = df["Label: Is cancer"]                    
 
-    # train decision tree                           
-    tree_clf = DecisionTreeClassifier(random_state=0)   # reproducible tree
-    tree_clf.fit(X, y)                                  # fit on full data
+    # Train my decision tree                            
+    tree_clf = DecisionTreeClassifier(random_state=0)   
+    tree_clf.fit(X, y)                                  
 
-    # show the learnt rules                         
-    print(export_text(tree_clf, feature_names=feat_cols))
+    # Show the learning groups                         
+    print(export_text(tree_clf, feature_names=feat_cols))  
 
 decision_tree(fr"util\test1.csv", "(v1)")
 
