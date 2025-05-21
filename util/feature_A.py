@@ -3,7 +3,7 @@ from skimage.transform import rotate
 import cv2
 
 
-def asymmetry(mask):
+def get_asymmetry(mask):
     scores = []
 
     # Crop and rotate 6 times to cover 180 degrees to check asymmetry from multiple angles

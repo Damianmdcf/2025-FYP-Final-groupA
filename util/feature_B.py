@@ -1,7 +1,7 @@
 import os
 import cv2
 import numpy as np
-import matplotlib as plt
+from skimage import morphology
 
 def border(mask):
     
@@ -26,3 +26,22 @@ def border(mask):
     # plt.show()
 
     return irregularity
+
+# Philip: This is an alternative to the function above. They both output compactness, but using two different approaches.
+# I have compared both and their outputs are similar except that measure_streaks() sometimes wrongly outputs 0, so there
+# maybe is some bug the code.
+def get_compactness(mask):
+    # Calculate area by summing over the white pixels in the binarized mask
+    area = np.sum(mask)
+
+    # Get the structuring element, which in this case is a disk
+    struct_el = morphology.disk(3)
+    
+    # Use the disk to erode (remove) only the pixels at the border
+    mask_eroded = morphology.binary_erosion(mask, struct_el)
+
+    # Get the perimeter by counting the number of pixel that was eroded above
+    perimeter = np.sum(mask ^ mask_eroded)
+
+    # Return the compactness using the formla seen below
+    return perimeter**2 / (4 * np.pi * area)
