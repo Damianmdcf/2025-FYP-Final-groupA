@@ -25,6 +25,11 @@ def getborder(mask):
     else:
         irregularity = (border_perimeter ** 2) / (4 * np.pi * lesion_area)
 
+    # 2. Min-max inside your dataset
+    raw  = (border_perimeter**2) / (4*np.pi*lesion_area)
+    norm_irreg = (raw - irreg_min) / (irreg_max - irreg_min)   # needs two passes
+
+
     return irregularity
 
 # Philip: This is an alternative to the function above. They both output compactness, but using two different approaches.
