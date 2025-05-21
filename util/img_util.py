@@ -44,7 +44,6 @@ class ImageDataLoader:
         self.directory = directory
         self.shuffle = shuffle
         self.transform = transform
-        i= 1179
    
         self.file_list= sorted([os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', 'jpeg', '.bmp', '.tiff'))])
 
@@ -61,21 +60,21 @@ class ImageDataLoader:
     def __len__(self):
         return self.num_batches
 
-    # def __iter__(self):
-    #     #Iterating throught all the images and applying transformations if necessesary"
-    #     for filename in self.file_list:
-    #         img_rgb, img_gray = readImageFile(filename)
-    #         # blackhat, tresh, img_out = inpaint_util.removeHair(img_rgb, img_gray)
+    def __iter__(self):
+        #Iterating throught all the images and applying transformations if necessesary"
+        for filename in self.file_list:
+            img_rgb, img_gray = readImageFile(filename)
+            # blackhat, tresh, img_out = inpaint_util.removeHair(img_rgb, img_gray)
 
-    #         # #Save the new images on a different folder/path 
-    #         # dir_path = os.path.dirname(filename)
-    #         # new_dir = os.path.join(dir_path, "New")
-    #         # os.makedirs(new_dir, exist_ok=True)
-    #         # saveImageFile(img_out, os.path.join(new_dir, os.path.basename(filename)))
+            # #Save the new images on a different folder/path 
+            # dir_path = os.path.dirname(filename)
+            # new_dir = os.path.join(dir_path, "New")
+            # os.makedirs(new_dir, exist_ok=True)
+            # saveImageFile(img_out, os.path.join(new_dir, os.path.basename(filename)))
 
-    #         irr = border(img_rgb)
+            irr = border(img_rgb)
 
-    #         yield img_rgb, img_gray, filename, irr
+            yield img_rgb, img_gray, filename, irr
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -84,8 +83,8 @@ data_folder_path = os.path.normpath(relative_path_to_data)
 
 loader = ImageDataLoader(data_folder_path)
 
-for rgb, gray, fname, irr in loader:                
-    print(f"{fname:25s}  Irregularity = {irr:.4f}")
+for rgb, gray, filename, irr in loader:                
+    print(f"{filename:25s}  Irregularity = {irr:.4f}")
  
 
 

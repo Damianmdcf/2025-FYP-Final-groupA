@@ -1,8 +1,10 @@
 import os
 import cv2
 import numpy as np
+import matplotlib as plt
 
 def border(mask):
+    
     #Scans binary mask and returns outlines of every "white" region
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
 
@@ -18,5 +20,9 @@ def border(mask):
         irregularity = 0
     else:
         irregularity = (border_perimeter ** 2) / (4 * np.pi * lesion_area)
+    
+    # plt.imshow(mask, cmap="gray", interpolation="nearest")
+    # plt.axis("off")
+    # plt.show()
 
     return irregularity
