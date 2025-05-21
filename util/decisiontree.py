@@ -16,7 +16,7 @@ def decision_tree(filepath, feature_version):
     X = df[feat_cols]                              
     y = df["Label: Is cancer"]                    
 
-    # Train my decision tree                           
+    # Train my decision tree                            
     tree_clf = DecisionTreeClassifier(random_state=0)   
     tree_clf.fit(X, y)                                  
 
