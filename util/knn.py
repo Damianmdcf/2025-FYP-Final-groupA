@@ -2,23 +2,26 @@ import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from scipy.stats import norm
 
 
-def knn(file_path, k):
+def knn(file_path, feature_version, k):
     
     df = pd.read_csv(file_path)
 
-
-    features = df[["feature A (v1)", "feature B (v1)", "feature C (v1)"]]
+    feat_cols = [
+    "feature A " + feature_version,
+    "feature B " + feature_version,
+    "feature C " + feature_version]
+    features = df[feat_cols]
     labels = df["Label: Is cancer"]
 
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)
+    kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
     accs, f1s, aucs = [], [], []
 
-    for train_index, test_index in kf.split(features):
+    for train_index, test_index in kf.split(features, labels):
         X_train, X_test = features.iloc[train_index], features.iloc[test_index]
         y_train, y_test = labels.iloc[train_index], labels.iloc[test_index]
 
@@ -41,4 +44,11 @@ def knn(file_path, k):
     margin = z * std_dev / np.sqrt(5)
     confidence_interval = (round(auc_mean - margin, 3), round(auc_mean + margin,3))
 
-    return f"K = {k}", f"Accuracy Mean = {round(accuracy, 3)}", f"F1 Mean= {round(F1, 3)}", f"AUC Mean = {round(auc_mean, 3)}", f"AUC Std. Dev = {round(std_dev, 3)}", f"AUC CI = {confidence_interval}"
+    return pd.DataFrame([{
+        "Model": f"knn {feature_version}, (k={k})",
+        "Accuracy Mean": round(accuracy, 3),
+        "F1 Mean": round(F1, 3),
+        "AUC Mean": round(auc_mean, 3),
+        "AUC Std. Dev": round(std_dev, 3),
+        "AUC 95% CI": confidence_interval,
+    }])
