@@ -82,12 +82,12 @@ def hsv_variance(image, slic_segments): #based on hsv variance
 
     return hue_var, sat_var
 
-mask2= cv2.imread("PAT_82_125_365_mask.png", cv2.IMREAD_GRAYSCALE)
-image2= cv2.imread("PAT_82_125_365.png")
-image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
+# mask2= cv2.imread("PAT_82_125_365_mask.png", cv2.IMREAD_GRAYSCALE)
+# image2= cv2.imread("PAT_82_125_365.png")
+# image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
 
-segment2= slic_segmentation(image2, mask2)
-print(get_irregularity_score(image2, segment2))
+# segment2= slic_segmentation(image2, mask2)
+# print(get_irregularity_score(image2, segment2))
 
 
 
