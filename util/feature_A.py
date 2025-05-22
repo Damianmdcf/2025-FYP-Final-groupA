@@ -12,14 +12,19 @@ def get_asymmetry(mask):
 
         # Add the asymmetry score for each rotation (the # pixels not overlapping divided by total white pixels)
         flipped = np.flip(segment)
+
+        if np.sum(segment) == 0:
+            continue
+
         score = np.sum(np.logical_xor(segment, flipped)) / (np.sum(segment))
+
         scores.append(score)
 
         # Rotate 30 degrees before next iteration 
         mask = rotate(mask, 30)
         
     # Return the average mean score
-    return sum(scores) / len(scores)
+    return sum(scores) / len(scores) if len(scores) > 0 else None
 
 
 

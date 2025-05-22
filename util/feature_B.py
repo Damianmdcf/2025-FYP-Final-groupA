@@ -8,6 +8,7 @@ from skimage import morphology
 # instead of the staircase method, it also ignores other blobs
 
 def getborder(mask):
+    mask = mask.astype(np.uint8)
     
     #Scans binary mask and returns outlines of every "white" region
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
