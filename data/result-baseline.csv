@@ -1,0 +1,9 @@
+Model,Accuracy Mean,F1 Mean,AUC Mean,AUC Std. Dev,AUC 95% CI
+Random_forest v100,0.977,0.0,0.572,0.054,"(np.float64(0.525), np.float64(0.619))"
+Random_forest v200,0.977,0.0,0.566,0.048,"(np.float64(0.524), np.float64(0.609))"
+Random_forest v300,0.977,0.0,0.566,0.056,"(np.float64(0.517), np.float64(0.615))"
+Decision_tree v1,0.958,0.12,0.547,0.039,0.513,0.581
+logistic regression V1: 0.5,0.976,0.0,0.697,0.093,"(np.float64(0.615), np.float64(0.778))"
+logistic regression V1: 0.3,0.974,0.033,0.697,0.093,"(np.float64(0.615), np.float64(0.778))"
+logistic regression V1: 0.03,0.915,0.179,0.697,0.093,"(np.float64(0.615), np.float64(0.778))"
+logistic regression V1: 0.01,0.07,0.046,0.697,0.093,"(np.float64(0.615), np.float64(0.778))"

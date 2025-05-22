@@ -5,18 +5,17 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from scipy.stats import norm
+import os
+from sklearn.metrics import confusion_matrix
 
 
 def decision_tree(filepath: str, feature_version: str):
     df = pd.read_csv(filepath)
 
-    feat_cols = [
-    "feature A " + feature_version,   # → "feature A (v1)"
-    "feature B " + feature_version,   # → "feature B (v1)"
-    "feature C " + feature_version]   # → "feature C (v1)"
+    feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
 
     X = df[feat_cols]                       
-    y = df["Label: Melanoma"]              
+    y = df["Melanoma"]              
 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
@@ -44,10 +43,20 @@ def decision_tree(filepath: str, feature_version: str):
     margin = z * auc_std / np.sqrt(kf.get_n_splits())
     ci = (round(auc_mean - margin, 3), round(auc_mean + margin, 3))
 
-    return pd.DataFrame([{
-        "Model": f"Decision_tree {feature_version},",
+    result_df = pd.DataFrame([{
+        "Model": f"Decision_tree {feature_version}",
         "Accuracy Mean": round(acc_mean, 3),
         "F1 Mean": round(f1_mean, 3),
         "AUC Mean": round(auc_mean, 3),
         "AUC Std. Dev": round(auc_std, 3),
-        "AUC 95% CI": ci,}]), aucs
+        "AUC 95% CI Lower": ci[0],
+        "AUC 95% CI Upper": ci[1],
+    }])
+
+    result_csv_path = r"C:\Users\bruda\OneDrive\Escritorio\Projects\2025-FYP-Final-groupA\data\result-baseline.csv"
+    result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
+    return result_df, aucs
+
+decision_tree(r"data/train-baseline-data.csv", "v1")
