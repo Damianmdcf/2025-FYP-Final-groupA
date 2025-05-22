@@ -14,7 +14,7 @@ def random_forest(filepath, feature_version, n_estimators: int = 100):
     "feature B " + feature_version,   
     "feature C " + feature_version]
 
-    X, y = df[feat_cols], df["Label: Is cancer"]                   
+    X, y = df[feat_cols], df["Label: Melanoma"]                   
 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 

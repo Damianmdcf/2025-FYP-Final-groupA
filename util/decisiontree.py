@@ -16,7 +16,7 @@ def decision_tree(filepath: str, feature_version: str):
     "feature C " + feature_version]   # → "feature C (v1)"
 
     X = df[feat_cols]                       
-    y = df["Label: Is cancer"]              
+    y = df["Label: Melanoma"]              
 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 

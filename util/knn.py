@@ -15,7 +15,7 @@ def knn(file_path, feature_version, k):
     "feature B " + feature_version,
     "feature C " + feature_version]
     features = df[feat_cols]
-    labels = df["Label: Is cancer"]
+    labels = df["Label: Melanoma"]
 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
