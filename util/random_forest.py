@@ -25,8 +25,7 @@ def random_forest(filepath, feature_version, n_estimators: int = 100):
         y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
 
         clf = RandomForestClassifier(       # 100 trees, class-balanced
-            n_estimators = n_estimators,
-            class_weight="balanced", #Gives more weight to cancer (lesser class) 
+            n_estimators = n_estimators, #Gives more weight to cancer (lesser class)  bootstrap
             random_state=0)
         clf.fit(X_tr, y_tr)                 
 
