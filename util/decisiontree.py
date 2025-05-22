@@ -44,15 +44,15 @@ def decision_tree(filepath: str, feature_version: str):
     margin = z * auc_std / np.sqrt(kf.get_n_splits())
     ci = (round(auc_mean - margin, 3), round(auc_mean + margin, 3))
 
-    return (
-        f"Accuracy mean = {acc_mean:.3f}",
-        f"F1 mean = {f1_mean:.3f}",
-        f"AUC mean = {auc_mean:.3f}",
-        f"AUC std = {auc_std:.3f}",
-        f"AUC 95% CI = {ci}"
-    )
+    return pd.DataFrame([{
+        "Model": f"Decision_tree {feature_version},",
+        "Accuracy Mean": round(acc_mean, 3),
+        "F1 Mean": round(f1_mean, 3),
+        "AUC Mean": round(auc_mean, 3),
+        "AUC Std. Dev": round(auc_std, 3),
+        "AUC 95% CI": ci,}])
 
-print(decision_tree(r"util\test1.csv", "(v1)"))
+print(decision_tree(r"util\structured_cancer_data.csv", "(v1)"))
 
 
 
