@@ -51,4 +51,4 @@ def knn(file_path, feature_version, k):
         "AUC Mean": round(auc_mean, 3),
         "AUC Std. Dev": round(std_dev, 3),
         "AUC 95% CI": confidence_interval,
-    }])
+    }]), aucs

@@ -56,6 +56,4 @@ def random_forest(filepath, feature_version, n_estimators: int = 100):
         "AUC Mean": round(auc_mean, 3),
         "AUC Std. Dev": round(std, 3),
         "AUC 95% CI": confidence_interval,
-    }])
-
-print(random_forest(r"util\structured_cancer_data.csv", "(v1)"))
+    }]), aucs
