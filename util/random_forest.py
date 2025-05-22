@@ -42,7 +42,7 @@ def random_forest(filepath: str, feature_version: str, n_estimators: int = 100):
     auc = np.mean(aucs) if aucs else float("nan")
     std = np.std(aucs) if aucs else float("nan")
 
-    # 95 % CI for AUC (skip if NaN)
+    
     if aucs:
         z = norm.ppf(0.975)
         ci = (round(auc - z*std/np.sqrt(len(aucs)), 3),
@@ -57,5 +57,4 @@ def random_forest(filepath: str, feature_version: str, n_estimators: int = 100):
             f"AUC 95% CI={ci}")
 
 
-# example usage
 print(random_forest(r"util\\structured_cancer_data.csv", "(v1)"))
