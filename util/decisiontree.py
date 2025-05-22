@@ -50,10 +50,4 @@ def decision_tree(filepath: str, feature_version: str):
         "F1 Mean": round(f1_mean, 3),
         "AUC Mean": round(auc_mean, 3),
         "AUC Std. Dev": round(auc_std, 3),
-        "AUC 95% CI": ci,}])
-
-print(decision_tree(r"util\structured_cancer_data.csv", "(v1)"))
-
-
-
-
+        "AUC 95% CI": ci,}]), aucs

@@ -50,7 +50,4 @@ def logistic_regression(file_path, feature_version):
         "AUC Mean": round(auc_mean, 3),
         "AUC Std. Dev": round(std_dev, 3),
         "AUC 95% CI": confidence_interval,
-        }])
-
-
-print(logistic_regression("structured_cancer_data.csv", "(v1)"))
+        }]), aucs
