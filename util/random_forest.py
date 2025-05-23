@@ -4,17 +4,16 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold 
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from scipy.stats import norm             
+from sklearn.metrics import confusion_matrix
+import os
 
 
-def random_forest(filepath, feature_version, n_estimators: int = 100):
+def random_forest(filepath, feature_version,n_estimators: int = 100):
     df = pd.read_csv(filepath)
 
-    feat_cols = [
-    "feature A " + feature_version,  
-    "feature B " + feature_version,   
-    "feature C " + feature_version]
+    feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
 
-    X, y = df[feat_cols], df["Label: Melanoma"]                   
+    X, y = df[feat_cols], df["Melanoma"]                   
 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
@@ -25,8 +24,7 @@ def random_forest(filepath, feature_version, n_estimators: int = 100):
         y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
 
         clf = RandomForestClassifier(       # 100 trees, class-balanced
-            n_estimators = n_estimators, #Gives more weight to cancer (lesser class)  bootstrap
-            random_state=0)
+            n_estimators = n_estimators, random_state=0)
         clf.fit(X_tr, y_tr)                 
 
         y_pred = clf.predict(X_te)          
@@ -49,11 +47,21 @@ def random_forest(filepath, feature_version, n_estimators: int = 100):
     else:
         confidence_interval = (float("nan"), float("nan"))
 
-    return pd.DataFrame([{
+    result_df = pd.DataFrame([{
         "Model": f"Random_forest {feature_version},",
         "Accuracy Mean": round(acc, 3),
         "F1 Mean": round(f1, 3),
         "AUC Mean": round(auc_mean, 3),
         "AUC Std. Dev": round(std, 3),
         "AUC 95% CI": confidence_interval,
-    }]), aucs
+    }])
+    result_csv_path = r"C:\Users\bruda\OneDrive\Escritorio\Projects\2025-FYP-Final-groupA\data\result-baseline.csv"
+    result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
+
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_te, y_pred))
+
+    result_df, aucs
+
+
+random_forest(r"data/train-baseline-data.csv", "v300", 300)

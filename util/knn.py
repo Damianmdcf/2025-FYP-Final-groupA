@@ -4,18 +4,18 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from scipy.stats import norm
+from sklearn.metrics import confusion_matrix
+import os
 
 
 def knn(file_path, feature_version, k):
     
     df = pd.read_csv(file_path)
 
-    feat_cols = [
-    "feature A " + feature_version,
-    "feature B " + feature_version,
-    "feature C " + feature_version]
+    feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
+    df = df.dropna(subset=feat_cols + ["Melanoma"])  # Drop rows with NaN in specified columns
     features = df[feat_cols]
-    labels = df["Label: Melanoma"]
+    labels = df["Melanoma"]
 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
@@ -26,6 +26,12 @@ def knn(file_path, feature_version, k):
         y_train, y_test = labels.iloc[train_index], labels.iloc[test_index]
 
         model = KNeighborsClassifier(n_neighbors=k)
+
+        # Skip fold if only one class is present in y_train or y_test
+        if len(np.unique(y_train)) < 2 or len(np.unique(y_test)) < 2:
+            print("Skipping fold due to only one class in y_train or y_test.")
+            continue
+
         model.fit(X_train, y_train)
 
         y_pred = model.predict(X_test)
@@ -44,11 +50,20 @@ def knn(file_path, feature_version, k):
     margin = z * std_dev / np.sqrt(5)
     confidence_interval = (round(auc_mean - margin, 3), round(auc_mean + margin,3))
 
-    return pd.DataFrame([{
+    result_df= pd.DataFrame([{
         "Model": f"knn {feature_version}, (k={k})",
         "Accuracy Mean": round(accuracy, 3),
         "F1 Mean": round(F1, 3),
         "AUC Mean": round(auc_mean, 3),
         "AUC Std. Dev": round(std_dev, 3),
-        "AUC 95% CI": confidence_interval,
-    }]), aucs
+        "AUC 95% CI": confidence_interval }])
+
+    result_csv_path = r"C:\Users\bruda\OneDrive\Escritorio\Projects\2025-FYP-Final-groupA\data\result-baseline.csv"
+    result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
+
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
+
+    return result_df, aucs
+
+knn(r"data/train-baseline-data.csv", "V5", 5)
