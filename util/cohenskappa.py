@@ -9,7 +9,7 @@ from img_util import readImageFile
 from inpaint_util import removeHair
 
 
-""" Converts binary hair mask to a discrete score: 0 = no hair detected (mask all zeros), 1 = some hair (non-zero, but low ratio), 2 = lots of hair (high ratio)"""
+#Converts binary hair mask to a discrete score: 0 = no hair detected (mask all zeros), 1 = some hair (non-zero, but low ratio), 2 = lots of hair (high ratio)
 def compute_hair_score(thresh_mask, high_thresh=0.3): 
     #Counts the number of pixels decided to be removed in the remove function
     hair_pixels = np.sum(thresh_mask > 0)
