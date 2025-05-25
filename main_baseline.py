@@ -15,10 +15,10 @@ if __name__ == "__main__":
     df = pd.DataFrame(columns=["img_id", "Label"])
     metadata = pd.read_csv("data/metadata.csv")
     df["img_id"] = metadata["img_id"]
-    df["Label"] = metadata["diagnostic"]
+    df["Melanoma"] = metadata["diagnostic"]
 
-    cancer = ["BCC", "SCC", "MEL"]
-    df["Label"] = df["Label"].isin(cancer).astype(int)
+    cancer = ["MEL"]
+    df["Melanoma"] = df["Melanoma"].isin(cancer).astype(int)
 
     # print("Please input feature version suffix:")
     # version_suffix = input()
