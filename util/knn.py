@@ -66,4 +66,5 @@ def knn(file_path, feature_version, k):
 
     return result_df, aucs
 
-knn(r"data/train-baseline-data.csv", "V5", 5)
+for k in (3, 5, 7):
+    knn(r"data/train-baseline-data.csv", "V", k)

@@ -9,7 +9,7 @@ import os
 from sklearn.metrics import confusion_matrix
 
 
-def decision_tree(filepath: str, feature_version: str):
+def decision_tree(filepath: str, feature_version: str, max_depth_given):
     df = pd.read_csv(filepath)
 
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
@@ -25,7 +25,7 @@ def decision_tree(filepath: str, feature_version: str):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
-        clf = DecisionTreeClassifier(random_state=0)
+        clf = DecisionTreeClassifier(max_depth= max_depth_given, random_state=0)
         clf.fit(X_train, y_train)                      
 
         y_pred = clf.predict(X_test)
@@ -59,4 +59,5 @@ def decision_tree(filepath: str, feature_version: str):
     print(confusion_matrix(y_test, y_pred))
     return result_df, aucs
 
-decision_tree(r"data/train-baseline-data.csv", "v1")
+for d in range(1, 8):
+    decision_tree(r"data/train-baseline-data.csv", "V", d)
