@@ -60,4 +60,4 @@ def decision_tree(filepath: str, feature_version: str, max_depth_given):
     return result_df, aucs
 
 for d in range(1, 8):
-    decision_tree(r"data/train-baseline-data.csv", "V", d)
+    decision_tree(r"data\extended-data-for-model.csv", "V", d)
