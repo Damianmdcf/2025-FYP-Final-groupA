@@ -27,5 +27,7 @@ def apply_flip(img, mask=None):
     
     return flipped_img, flipped_mask
 
-def apply_noise(img):  
-    return random_noise(img,var=0.1)
+def noise_augmentation(img):
+    img_noisy = random_noise(img,var=0.1)
+    img_noisy_uint8 = (img_noisy * 255).astype(np.uint8)
+    return img_noisy_uint8
