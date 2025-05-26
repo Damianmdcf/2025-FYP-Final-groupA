@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+from skimage.util import random_noise
+import random
 
 def apply_clahe(img):
 
@@ -15,3 +17,15 @@ def apply_clahe(img):
     img_clahe = cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2RGB) # Convert from LAB to RGB
 
     return img_clahe
+
+def apply_flip(img, mask=None):
+
+    code = random.randint(-1, 1) # -1: flip vertically, 0: flip horizontally, 1: flip both
+
+    flipped_img = cv2.flip(img, code)
+    flipped_mask = cv2.flip(mask, code) if mask is not None else None
+    
+    return flipped_img, flipped_mask
+
+def apply_noise(img):  
+    return random_noise(img,var=0.1)
