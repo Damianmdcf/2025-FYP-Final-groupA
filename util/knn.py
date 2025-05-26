@@ -10,84 +10,71 @@ from pathlib import Path
 
 droot= Path("data")
 
-def knn(file_path, feature_version, k):
+
+def knn(filepath, k):
     
-    df = pd.read_csv(file_path)
+    df = pd.read_csv(filepath)
 
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
     df = df.dropna(subset=feat_cols + ["Melanoma"])  # Drop rows with NaN in specified columns
-    features = df[feat_cols]
-    labels = df["Melanoma"]
+    X= df[feat_cols]
+    y = df["Melanoma"]
 
+    #Only uses the estandarized values 
+    feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
+
+    rows = []
+
+    #Apply K folds top the data 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    accs, f1s, aucs = [], [], []
+    #For each one of the folds, use the train and "test" data to return crucial values (aucs, f1s, etc) 
+    for fold, (tr, te) in enumerate(kf.split(X, y), start=1):
 
-    fold_rows= []
+        Xtr, Xte = X.iloc[tr], X.iloc[te]
+        ytr, yte = y.iloc[tr], y.iloc[te]
 
-    for fold, (train_index, test_index) in enumerate(kf.split(features, labels), 1):
+        #Starts a KNN classifier, train and fit one per fold 
+        clf = KNeighborsClassifier(n_neighbors=k)
+        clf.fit(Xtr, ytr) 
 
-        X_train, X_test = features.iloc[train_index], features.iloc[test_index]
-        y_train, y_test = labels.iloc[train_index], labels.iloc[test_index]
-
-        # Skip if either split has only one class
-        if len(np.unique(y_train)) < 2 or len(np.unique(y_test)) < 2:
-            print(f"Skip fold {fold}: only one class present.")
-            continue
-
-        model = KNeighborsClassifier(n_neighbors=k)
-        model.fit(X_train, y_train)           # ← fit first
-
-        y_pred  = model.predict(X_test)       # ← then predict
-        y_probs = model.predict_proba(X_test)[:, 1]
-
-        acc = accuracy_score(y_test, y_pred)
-        f1  = f1_score(y_test, y_pred)
-        auc = roc_auc_score(y_test, y_probs)
-
-        accs.append(acc);  f1s.append(f1);  aucs.append(auc)
-
-        fold_rows.append({
+        ypred = clf.predict(Xte)
+        yprob = clf.predict_proba(Xte)[:,1]
+        
+        #Appends all the crucial values to a list so we can retrieve them later 
+        rows.append({
             "Model": f"KNN {k}",
-            "Fold" : fold,
-            "Accuracy": round(acc, 3),
-            "F1":       round(f1, 3),
-            "AUC":      round(auc, 3)
+            "Fold":  fold,
+            "Accuracy": accuracy_score(yte, ypred),
+            "F1":       f1_score(yte, ypred),
+            "AUC":      roc_auc_score(yte, yprob)
         })
 
-    per_fold_path = droot / "result-fold-metrics-extended.csv"
+        if __name__ == "__main__":
+                print("Confusion Matrix:")
+                print(confusion_matrix(yte, ypred))
+    
+    
+    #Transforms values into data a frame
+    per_fold = pd.DataFrame(rows).pivot( index="Model", columns="Fold", values=["Accuracy", "F1", "AUC"])
 
-    wide = pd.DataFrame(fold_rows).pivot(index="Model", columns="Fold", values=["F1", "AUC"])
-    wide.columns = [f"{m} fold {f}" for m, f in wide.columns]      # flatten names
-    wide.reset_index().to_csv(per_fold_path,
-                           mode="a", index=False,
-                           header=not os.path.exists(per_fold_path))
+   
+    per_fold.columns = [f"{metric}_fold_{fold}" for metric, fold in per_fold.columns]
+    per_fold = per_fold.reset_index()
+    
+    # compute summary statistics
 
-    accuracy = np.mean(accs)
-    F1 = np.mean(f1s)
-    auc_mean = np.mean(aucs)
-    std_dev = np.std(aucs)
+    n_folds = 5
+    # mean for all the crucial values 
+    per_fold["Accuracy Mean"]= per_fold[[f"Accuracy_fold_{i}" for i in range(1, n_folds+1)]].mean(axis=1)
+    per_fold["F1 Mean"] = per_fold[[f"F1_fold_{i}"       for i in range(1, n_folds+1)]].mean(axis=1)
+    per_fold["AUC Mean"]= per_fold[[f"AUC_fold_{i}"      for i in range(1, n_folds+1)]].mean(axis=1)
 
+    # std dev of AUC
+    per_fold["AUC Std. Dev"]= per_fold[[f"AUC_fold_{i}" for i in range(1, n_folds+1)]].std(axis=1)
+
+    # 95% CI for AUC mean
     z = norm.ppf(0.975)
-    margin = z * std_dev / np.sqrt(5)
-    confidence_interval = (round(auc_mean - margin, 3), round(auc_mean + margin,3))
-
-    result_df= pd.DataFrame([{
-        "Model": f"knn {feature_version}, (k={k})",
-        "Accuracy Mean": round(accuracy, 3),
-        "F1 Mean": round(F1, 3),
-        "AUC Mean": round(auc_mean, 3),
-        "AUC Std. Dev": round(std_dev, 3),
-        "AUC 95% CI": confidence_interval }])
-
-    # result_csv_path = droot / "result-hair-removal.csv"
-    # result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
-
-    print("Confusion Matrix:")
-    print(confusion_matrix(y_test, y_pred))
-
-    return result_df, aucs
-
-file_path= droot / "train-extended-data.csv"
-for k in (1, 3, 5, 7):
-    knn(file_path, "V", k)
+    per_fold["AUC 95% CI"]= per_fold.apply(lambda row: ( round(row["AUC Mean"] - z * row["AUC Std. Dev"] / np.sqrt(n_folds), 3), round(row["AUC Mean"] + z * row["AUC Std. Dev"] / np.sqrt(n_folds), 3)), axis=1)
+    
+    return per_fold
