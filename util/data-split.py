@@ -11,7 +11,7 @@ def data_split(input_csv):
     random_state=42
     )
 
-    train_df.to_csv("../data/train-baseline-data.csv", index=False)
-    test_df.to_csv("../data/test-baseline-data.csv", index=False)
+    train_df.to_csv("../data/train-extended-data.csv", index=False)
+    test_df.to_csv("../data/test-extended-data.csv", index=False)
 
-data_split("../data/baseline-data-for-model.csv")
+data_split("../data/extended-data-for-model.csv")
