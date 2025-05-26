@@ -5,8 +5,8 @@ from sklearn.metrics import cohen_kappa_score
 import cv2
 import numpy as np
 import os
-from img_util import readImageFile
-from inpaint_util import removeHair
+from .img_util import readImageFile
+from .inpaint_util import removeHair
 
 
 #Converts binary hair mask to a discrete score: 0 = no hair detected (mask all zeros), 1 = some hair (non-zero, but low ratio), 2 = lots of hair (high ratio)
@@ -17,8 +17,9 @@ def compute_hair_score(thresh_mask, high_thresh=0.3):
 
     #Calculate the proportion of image covered in hair 
     hair_ratio = hair_pixels / total_pixels
+    print(hair_ratio)
 
-    if hair_pixels == 0: #set to zero, as we agreed we say ) if and only if there is not a single hair in the pic
+    if hair_ratio < 0.001: #set to zero, as we agreed we say ) if and only if there is not a single hair in the pic
         return 0
     elif hair_ratio < high_thresh: #0.3 value decided looking at the hitsogram of hair ratios, on ipynb file Maja's computer
         return 1
@@ -40,10 +41,10 @@ def Cohenskappa(annotations, function_output):
     return kappa
 
 
-folder_path = "data_images" 
+folder_path = "../images" 
 
 #Calculate computer score for the 200 images we annotated 
-df_metadata = pd.read_csv("metadata.csv")
+df_metadata = pd.read_csv("data/metadata.csv")
 image_ids = df_metadata["img_id"][:200] 
 
 hair_scores = []
@@ -55,7 +56,7 @@ for image_id in image_ids:
         continue
     try:
         img_rgb, img_gray = readImageFile(fpath)
-        _, thresh, _ = removeHair(img_rgb, img_gray)
+        _, thresh, _ = removeHair(img_rgb, img_gray, kernel_size=5)
         score = compute_hair_score(thresh)
         hair_scores.append((image_id, score))
     except Exception as e:
@@ -65,7 +66,7 @@ for image_id in image_ids:
 df_hairscores = pd.DataFrame(hair_scores, columns=["img_id", "auto_score"])
 
 # Load annotations
-annotations = pd.read_csv("annotations.csv")
+annotations = pd.read_csv("annotations/annotations.csv")
 
 # Load model outputs
 computer_assesment= df_hairscores["auto_score"].astype(int).values
