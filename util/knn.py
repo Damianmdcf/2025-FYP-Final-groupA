@@ -6,7 +6,9 @@ from sklearn.model_selection import StratifiedKFold
 from scipy.stats import norm
 from sklearn.metrics import confusion_matrix
 import os
+from pathlib import Path
 
+droot= Path("data")
 
 def knn(file_path, feature_version, k):
     
@@ -21,25 +23,45 @@ def knn(file_path, feature_version, k):
 
     accs, f1s, aucs = [], [], []
 
-    for train_index, test_index in kf.split(features, labels):
+    fold_rows= []
+
+    for fold, (train_index, test_index) in enumerate(kf.split(features, labels), 1):
+
         X_train, X_test = features.iloc[train_index], features.iloc[test_index]
         y_train, y_test = labels.iloc[train_index], labels.iloc[test_index]
 
-        model = KNeighborsClassifier(n_neighbors=k)
-
-        # Skip fold if only one class is present in y_train or y_test
+        # Skip if either split has only one class
         if len(np.unique(y_train)) < 2 or len(np.unique(y_test)) < 2:
-            print("Skipping fold due to only one class in y_train or y_test.")
+            print(f"Skip fold {fold}: only one class present.")
             continue
 
-        model.fit(X_train, y_train)
+        model = KNeighborsClassifier(n_neighbors=k)
+        model.fit(X_train, y_train)           # ← fit first
 
-        y_pred = model.predict(X_test)
+        y_pred  = model.predict(X_test)       # ← then predict
         y_probs = model.predict_proba(X_test)[:, 1]
 
-        accs.append(accuracy_score(y_test, y_pred))
-        f1s.append(f1_score(y_test, y_pred))
-        aucs.append(roc_auc_score(y_test, y_probs))
+        acc = accuracy_score(y_test, y_pred)
+        f1  = f1_score(y_test, y_pred)
+        auc = roc_auc_score(y_test, y_probs)
+
+        accs.append(acc);  f1s.append(f1);  aucs.append(auc)
+
+        fold_rows.append({
+            "Model": f"KNN {k}",
+            "Fold" : fold,
+            "Accuracy": round(acc, 3),
+            "F1":       round(f1, 3),
+            "AUC":      round(auc, 3)
+        })
+
+    per_fold_path = droot / "result-fold-metrics-extended.csv"
+
+    wide = pd.DataFrame(fold_rows).pivot(index="Model", columns="Fold", values=["F1", "AUC"])
+    wide.columns = [f"{m} fold {f}" for m, f in wide.columns]      # flatten names
+    wide.reset_index().to_csv(per_fold_path,
+                           mode="a", index=False,
+                           header=not os.path.exists(per_fold_path))
 
     accuracy = np.mean(accs)
     F1 = np.mean(f1s)
@@ -58,13 +80,14 @@ def knn(file_path, feature_version, k):
         "AUC Std. Dev": round(std_dev, 3),
         "AUC 95% CI": confidence_interval }])
 
-    result_csv_path = r"C:\Users\bruda\OneDrive\Escritorio\Projects\2025-FYP-Final-groupA\data\result-baseline.csv"
-    result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
+    # result_csv_path = droot / "result-hair-removal.csv"
+    # result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
 
     print("Confusion Matrix:")
     print(confusion_matrix(y_test, y_pred))
 
     return result_df, aucs
 
-for k in (3, 5, 7):
-    knn(r"data/train-baseline-data.csv", "V", k)
+file_path= droot / "train-extended-data.csv"
+for k in (1, 3, 5, 7):
+    knn(file_path, "V", k)

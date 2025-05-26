@@ -6,6 +6,13 @@ from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from scipy.stats import norm             
 from sklearn.metrics import confusion_matrix
 import os
+from pathlib import Path
+
+
+droot= Path("data")
+
+
+fold_rows= []
 
 
 def random_forest(filepath, feature_version,n_estimators: int = 100):
@@ -19,21 +26,38 @@ def random_forest(filepath, feature_version,n_estimators: int = 100):
 
     accs, f1s, aucs = [], [], []            
 
-    for train_idx, test_idx in kf.split(X, y):  
+    for fold, (train_idx, test_idx) in enumerate(kf.split(X, y), 1):  
         X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
         y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
 
         clf = RandomForestClassifier(       # 100 trees, class-balanced
-            n_estimators = n_estimators, random_state=0)
+            max_depth=5, n_estimators = n_estimators, random_state=0)
         clf.fit(X_tr, y_tr)                 
 
         y_pred = clf.predict(X_te)          
         y_prob = clf.predict_proba(X_te)[:, 1] 
 
-        accs.append(accuracy_score(y_te, y_pred))
-        f1s.append(f1_score(y_te, y_pred))
-   
-        aucs.append(roc_auc_score(y_te, y_prob))
+        acc = accuracy_score(y_te, y_pred)
+        f1  = f1_score(y_te, y_pred)
+        auc = roc_auc_score(y_te, y_prob)
+
+        accs.append(acc);  f1s.append(f1);  aucs.append(auc)
+
+        fold_rows.append({
+            "Model": f"Random Forest {feature_version}",
+            "Fold" : fold,
+            "Accuracy": round(acc, 3),
+            "F1":       round(f1, 3),
+            "AUC":      round(auc, 3)
+        })
+
+    per_fold_path = droot / "result-fold-metrics-extended.csv"
+
+    # wide = pd.DataFrame(fold_rows).pivot(index="Model", columns="Fold", values=["F1", "AUC"])
+    # wide.columns = [f"{m} fold {f}" for m, f in wide.columns]      
+    # wide.reset_index().to_csv(per_fold_path,
+    #                        mode="a", index=False,
+    #                        header=not os.path.exists(per_fold_path))
 
     acc, f1 = np.mean(accs), np.mean(f1s)  
     auc_mean = np.mean(aucs) if aucs else float("nan")
@@ -55,13 +79,13 @@ def random_forest(filepath, feature_version,n_estimators: int = 100):
         "AUC Std. Dev": round(std, 3),
         "AUC 95% CI": confidence_interval,
     }])
-    result_csv_path = r"C:\Users\bruda\OneDrive\Escritorio\Projects\2025-FYP-Final-groupA\data\result-baseline.csv"
-    result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
+    # result_csv_path = droot / "result-hair-removal.csv"
+    # result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
 
     print("Confusion Matrix:")
     print(confusion_matrix(y_te, y_pred))
 
     result_df, aucs
 
-
-print(random_forest(r"data/train-baseline-data.csv", "v1000", 1000))
+file_path= droot / "train-extended-data.csv"
+random_forest(file_path, "v1000", 1000)
