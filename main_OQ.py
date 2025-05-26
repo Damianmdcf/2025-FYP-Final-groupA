@@ -22,9 +22,9 @@ if __name__ == "__main__":
     i = 1
     for img_id, assymetry_noise, _border_noise, color_noise, assymetry_contrast, _border_contrast, color_contrast, assymetry_extra_border, _border_extra_border, color_extra_border in loader:
         print(f"Now loading: {img_id}")
-        rows.append({"img_id": f"{img_id}_noise", A: assymetry_noise, B: _border_noise, C: color_noise})
-        rows.append({"img_id": f"{img_id}_contrast", A: assymetry_contrast, B: _border_contrast, C: color_contrast})
-        rows.append({"img_id": f"{img_id}_extra_border", A: assymetry_extra_border, B: _border_extra_border, C: color_extra_border})
+        rows.append({"img_id": f"noise_{img_id}", A: assymetry_noise, B: _border_noise, C: color_noise})
+        rows.append({"img_id": f"contrast_{img_id}", A: assymetry_contrast, B: _border_contrast, C: color_contrast})
+        rows.append({"img_id": f"extra_border_{img_id}", A: assymetry_extra_border, B: _border_extra_border, C: color_extra_border})
         print(f"{i} done {52-i} to go")
         if i == 4:
             break
@@ -46,4 +46,4 @@ if __name__ == "__main__":
     # Combine the two DataFrames
     combined_df = pd.concat([baseline_df, df_features], ignore_index=True)
 
-    combined_df.to_csv("data/OQ-data-for-model.csv", index=False)
+    df_features.to_csv("data/OQ-data-for-model.csv", index=False)
