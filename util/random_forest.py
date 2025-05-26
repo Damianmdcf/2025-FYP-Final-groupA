@@ -64,4 +64,4 @@ def random_forest(filepath, feature_version,n_estimators: int = 100):
     result_df, aucs
 
 
-random_forest(r"data/train-baseline-data.csv", "v300", 300)
+print(random_forest(r"data/train-baseline-data.csv", "v1000", 1000))

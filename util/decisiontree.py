@@ -53,7 +53,7 @@ def decision_tree(filepath: str, feature_version: str, max_depth_given):
         "AUC 95% CI Upper": ci[1],
     }])
 
-    result_csv_path = r"C:\Users\bruda\OneDrive\Escritorio\Projects\2025-FYP-Final-groupA\data\result-baseline.csv"
+    result_csv_path = r"\data\result-baseline.csv"
     result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
     print("Confusion Matrix:")
     print(confusion_matrix(y_test, y_pred))
