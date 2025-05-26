@@ -1,5 +1,11 @@
 import os
 import pandas as pd
+
+
+import matplotlib.pyplot as plt
+from util.feature_A import crop
+
+
 from util.img_util import ImageDataLoader
 from dotenv import load_dotenv
 load_dotenv()
@@ -9,8 +15,14 @@ mask_path = os.getenv("MASK_DATA_URL_LOCAL")
 
 if __name__ == "__main__":
     loader = ImageDataLoader(images_path, mask_path, hairless = False)
-    # error_image = "PAT_1093_379_273.png"
-    # loader.one_image(error_image)
+    # error_image = "PAT_1022_115_132.png"
+    # assymetry, _border, color, mask = loader.one_image(error_image)
+    # cropped = crop(mask)
+    # plt.imshow(mask)
+    # plt.title("Mask Preview")
+    # plt.axis('off')  # optional: hides axis ticks
+    # plt.show()
+
 
     df = pd.DataFrame(columns=["img_id", "Label"])
     metadata = pd.read_csv("data/metadata.csv")
