@@ -53,31 +53,38 @@ def apply_smote_and_undersample(df, feature_cols, id_col, label_col,
                                  smote_ratio=0.3, under_ratio=0.5, k_neighbors=5):
     
     #Extract data
-    X = df[feature_cols].to_numpy()
-    y = df[label_col].to_numpy()
+    X = df[feature_cols]
+    y = df[label_col]
     ids = df[id_col].to_list()
 
     #oversample the minority class using SMOTE, adds synenthis samples, #0.1, try to change k_values
-    over = SMOTE(sampling_strategy=smote_ratio, k_neighbors=k_neighbors, random_state=42)
+    smote = SMOTE(sampling_strategy=smote_ratio, k_neighbors=k_neighbors, random_state=42)
+    X_smote, y_smote = smote.fit_resample(X, y)
+
+    # Identify how many synthetic samples were added, neccessary to correctly label data, as this time we are not only adding new data but later randomly deleting cases from majority class
+    n_original = len(df)
+    n_synthetic = len(X_smote) - n_original
+
+    # Create new IDs for synthetic samples
+    new_ids = ids + [f"synthetic_{i}.jpg" for i in range(n_synthetic)]
+
+    # Create new DataFrame 
+    df_smote = pd.DataFrame(X_smote, columns=feature_cols)
+    df_smote[label_col] = y_smote
+    df_smote[id_col] = new_ids
+
     #undersample the majority class, ranodmly removes non-melanoma cases, reduces the risk of overfitting to the overrepresented majority class
-    under = RandomUnderSampler(sampling_strategy=under_ratio, random_state=42)
-    #build pipeline to first apply SMOTE then undersampling
-    pipeline = Pipeline(steps=[('o', over), ('u', under)])
-    X_res, y_res= pipeline.fit_resample(X, y)
+    rus = RandomUnderSampler(sampling_strategy=under_ratio, random_state=42)
+    X_final, y_final= rus.fit_resample(X_smote, y_smote)
 
     #print the amount of samples after performing SMOTE and undersampling
-    print("After SMOTE + u:", Counter(y_res))
+    print("After SMOTE + u:", Counter(y_final))
 
-     # Build final DataFrame
-    df_res = pd.DataFrame(X_res, columns=feature_cols)
-    df_res[label_col] = y_res
-    df_res[id_col] = [
-        ids[i] if i < len(ids) else f"synthetic_{i - len(ids)}"
-        for i in range(len(df_res))
-    ]
+    final_indices= rus.sample_indices_
+    df_final= df_smote.iloc[final_indices].copy()
 
-    # Return in desired column order
-    return df_res[[id_col, label_col] + feature_cols]
+    # Return the augmentanted dataframe
+    return df_final
     
 
 
@@ -92,5 +99,5 @@ df_smote.to_csv("../data/abc_features_smote.csv", index= False)
 
 #Apply smote and under_sampling
 df_smote_u= apply_smote_and_undersample(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma")
-df_smote_u.to_csv("../data/abc_features_ou.csv", index= False)
+df_smote_u.to_csv("../data/result-smote+ undersampling.csv", index= False)
 
