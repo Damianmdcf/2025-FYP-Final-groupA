@@ -1,0 +1,15 @@
+Model,Accuracy Mean,F1 Mean,AUC Mean,AUC Std. Dev,AUC 95% CI Lower,AUC 95% CI Upper
+Decision_tree V,0.784,0.47,0.655,0.02,0.638,0.673
+Decision_tree V,0.809,0.474,0.718,0.014,0.705,0.73
+Decision_tree V,0.818,0.461,0.771,0.012,0.76,0.782
+Decision_tree V,0.818,0.48,0.797,0.007,0.791,0.803
+Decision_tree V,0.824,0.542,0.814,0.019,0.797,0.831
+Decision_tree V,0.832,0.569,0.829,0.02,0.812,0.847
+Decision_tree V,0.834,0.575,0.839,0.012,0.828,0.849
+logistic regression V1: 0.01,0.231,0.375,0.699,0.027,"(np.float64(0.676), np.float64(0.723))"
+logistic regression V3: 0.03,0.231,0.375,0.699,0.027,"(np.float64(0.676), np.float64(0.723))"
+logistic regression V3: 0.3,0.231,0.375,0.699,0.027,"(np.float64(0.676), np.float64(0.723))"
+logistic regression V3: 0.3,0.231,0.375,0.699,0.027,"(np.float64(0.676), np.float64(0.723))"
+logistic regression V3: 0.7,0.794,0.422,0.699,0.027,"(np.float64(0.676), np.float64(0.723))"
+logistic regression V3: 0.7,0.286,0.39,0.699,0.027,"(np.float64(0.676), np.float64(0.723))"
+logistic regression V3: 0.2,0.592,0.416,0.699,0.027,"(np.float64(0.676), np.float64(0.723))"

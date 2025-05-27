@@ -18,11 +18,11 @@ def clean_abc_data(df, feature_cols):
     return df_clean
 
 
-df_clean= clean_abc_data(df_abc, ['feature_a', 'feature_b', 'feature_c'])
+df_clean= clean_abc_data(df_abc, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'])
 
 
 
-def apply_smote_only(df, feature_cols, id_col, label_col, sampling_ratio=0.5, k_neighbors=5):
+def apply_smote_only(df, feature_cols, id_col, label_col, sampling_ratio=0.3, k_neighbors=5):
     #Undersamples the minority class using SMOTE [creating synthethic samples by interpolating between real minority samples]
     X = df[feature_cols].values
     y = df[label_col].values
@@ -37,45 +37,60 @@ def apply_smote_only(df, feature_cols, id_col, label_col, sampling_ratio=0.5, k_
     print("After SMOTE:", Counter(y_s))
 
     #created a data frame with added samples
-    df_s = pd.DataFrame(X_s, columns=feature_cols)
-    df_s[label_col] = y_s
-    df_s[id_col] = ['synthetic_' + str(i) if i >= len(ids) else ids[i] for i in range(len(df_s))]
+    df_s = pd.DataFrame([{
+    'img_id': ids[i] if i < len(ids) else f'synthetic_{i - len(ids)}',
+    'Melanoma': y_s[i],
+    'Z_feature_a': X_s[i][0],
+    'Z_feature_b': X_s[i][1],
+    'Z_feature_c': X_s[i][2]
+    } for i in range(len(X_s))])
+
 
     return df_s
 
 
 def apply_smote_and_undersample(df, feature_cols, id_col, label_col,
                                  smote_ratio=0.3, under_ratio=0.5, k_neighbors=5):
+    
+    #Extract data
+    X = df[feature_cols].to_numpy()
+    y = df[label_col].to_numpy()
+    ids = df[id_col].to_list()
 
-    X = df[feature_cols].values
-    y = df[label_col].values
-    ids = df[id_col].values
     #oversample the minority class using SMOTE, adds synenthis samples, #0.1, try to change k_values
     over = SMOTE(sampling_strategy=smote_ratio, k_neighbors=k_neighbors, random_state=42)
     #undersample the majority class, ranodmly removes non-melanoma cases, reduces the risk of overfitting to the overrepresented majority class
     under = RandomUnderSampler(sampling_strategy=under_ratio, random_state=42)
     #build pipeline to first apply SMOTE then undersampling
     pipeline = Pipeline(steps=[('o', over), ('u', under)])
-    X_ou, y_ou= pipeline.fit_resample(X, y)
-
-    df_ou = pd.DataFrame(X_ou, columns=feature_cols)
-    df_ou[label_col] = y_ou
-    df_ou[id_col] = ['synthetic_' + str(i) if i >= len(ids) else ids[i] for i in range(len(df_ou))]
+    X_res, y_res= pipeline.fit_resample(X, y)
 
     #print the amount of samples after performing SMOTE and undersampling
-    print("After SMOTE + u:", Counter(y_ou))
+    print("After SMOTE + u:", Counter(y_res))
 
-    return df_ou
+     # Build final DataFrame
+    df_res = pd.DataFrame(X_res, columns=feature_cols)
+    df_res[label_col] = y_res
+    df_res[id_col] = [
+        ids[i] if i < len(ids) else f"synthetic_{i - len(ids)}"
+        for i in range(len(df_res))
+    ]
+
+    # Return in desired column order
+    return df_res[[id_col, label_col] + feature_cols]
+    
+
 
 
 
 #Apply smote to trained data
-df_smote= apply_smote_only(df_clean, ['feature_a', 'feature_b', 'feature_c'], "img_id", "Melanoma")
+df_smote= apply_smote_only(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma")
 #save the data framework
 df_smote.to_csv("../data/abc_features_smote.csv", index= False)
 
 
 
 #Apply smote and under_sampling
-df_smote_u= apply_smote_and_undersample(df_clean, ['feature_a', 'feature_b', 'feature_c'], "img_id", "Melanoma")
+df_smote_u= apply_smote_and_undersample(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma")
 df_smote_u.to_csv("../data/abc_features_ou.csv", index= False)
+
