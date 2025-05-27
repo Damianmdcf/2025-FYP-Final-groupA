@@ -1,67 +1,76 @@
-import pandas as pd                      
+import pandas as pd                       
 import numpy as np                       
 from sklearn.ensemble import RandomForestClassifier  
 from sklearn.model_selection import StratifiedKFold 
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix
 from scipy.stats import norm             
-from sklearn.metrics import confusion_matrix
-import os
+from pathlib import Path
 
 
-def random_forest(filepath, feature_version,n_estimators: int = 100):
+droot = Path("data")  
+
+def random_forest(filepath, n_estimators: int = 100):
+    
     df = pd.read_csv(filepath)
 
+    #Only uses the estandarized values 
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
 
-    X, y = df[feat_cols], df["Melanoma"]                   
+    X, y      = df[feat_cols], df["Melanoma"]
+    
+    
+    rows = []
 
+    #Apply K folds top the data 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    accs, f1s, aucs = [], [], []            
+    #For each one of the folds, use the train and "test" data to return crucial values (aucs, f1s, etc) 
+    for fold, (tr, te) in enumerate(kf.split(X, y), start=1):
 
-    for train_idx, test_idx in kf.split(X, y):  
-        X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
-        y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
+        Xtr, Xte = X.iloc[tr], X.iloc[te]
+        ytr, yte = y.iloc[tr], y.iloc[te]
 
-        clf = RandomForestClassifier(       # 100 trees, class-balanced
-            n_estimators = n_estimators, random_state=0)
-        clf.fit(X_tr, y_tr)                 
+        #Starts a Random forest classifier, train and fit one per fold 
+        clf = RandomForestClassifier( max_depth=5, n_estimators=n_estimators, random_state=0)
+        clf.fit(Xtr, ytr)
 
-        y_pred = clf.predict(X_te)          
-        y_prob = clf.predict_proba(X_te)[:, 1] 
-
-        accs.append(accuracy_score(y_te, y_pred))
-        f1s.append(f1_score(y_te, y_pred))
-   
-        aucs.append(roc_auc_score(y_te, y_prob))
-
-    acc, f1 = np.mean(accs), np.mean(f1s)  
-    auc_mean = np.mean(aucs) if aucs else float("nan")
-    std = np.std(aucs) if aucs else float("nan")
-
+        ypred = clf.predict(Xte)
+        yprob = clf.predict_proba(Xte)[:,1]
+        
+        #Appends all the crucial values to a list so we can retrieve them later 
+        rows.append({
+            "Model": f"Random Forest {n_estimators}",
+            "Fold":  fold,
+            "Accuracy": accuracy_score(yte, ypred),
+            "F1":       f1_score(yte, ypred),
+            "AUC":      roc_auc_score(yte, yprob)
+        })
     
-    if aucs:
-        z = norm.ppf(0.975)
-        confidence_interval = (round(auc_mean - z*std/np.sqrt(len(aucs)), 3),
-              round(auc_mean + z*std/np.sqrt(len(aucs)), 3))
-    else:
-        confidence_interval = (float("nan"), float("nan"))
+    
+    #Transforms values into data a frame
+    per_fold = pd.DataFrame(rows).pivot( index="Model", columns="Fold", values=["Accuracy", "F1", "AUC"])
 
-    result_df = pd.DataFrame([{
-        "Model": f"Random_forest {feature_version},",
-        "Accuracy Mean": round(acc, 3),
-        "F1 Mean": round(f1, 3),
-        "AUC Mean": round(auc_mean, 3),
-        "AUC Std. Dev": round(std, 3),
-        "AUC 95% CI": confidence_interval,
-    }])
-    result_csv_path = r"C:\Users\bruda\OneDrive\Escritorio\Projects\2025-FYP-Final-groupA\data\result-baseline.csv"
-    result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
+   
+    per_fold.columns = [f"{metric}_fold_{fold}" for metric, fold in per_fold.columns]
+    per_fold = per_fold.reset_index()
+    
+    # compute summary statistics
 
-    print("Confusion Matrix:")
-    print(confusion_matrix(y_te, y_pred))
+    n_folds = 5
+    # mean for all the crucial values 
+    per_fold["Accuracy Mean"]= per_fold[[f"Accuracy_fold_{i}" for i in range(1, n_folds+1)]].mean(axis=1)
+    per_fold["F1 Mean"] = per_fold[[f"F1_fold_{i}"       for i in range(1, n_folds+1)]].mean(axis=1)
+    per_fold["AUC Mean"]= per_fold[[f"AUC_fold_{i}"      for i in range(1, n_folds+1)]].mean(axis=1)
 
-    result_df, aucs
+    # std dev of AUC
+    per_fold["AUC Std. Dev"]= per_fold[[f"AUC_fold_{i}" for i in range(1, n_folds+1)]].std(axis=1)
+
+    # 95% CI for AUC mean
+    z = norm.ppf(0.975)
+    per_fold["AUC 95% CI"]= per_fold.apply(lambda row: ( round(row["AUC Mean"] - z * row["AUC Std. Dev"] / np.sqrt(n_folds), 3), round(row["AUC Mean"] + z * row["AUC Std. Dev"] / np.sqrt(n_folds), 3)), axis=1)
+    
+  
+    
+    return per_fold
 
 
-print(random_forest(r"data/train-baseline-data.csv", "v1000", 1000))

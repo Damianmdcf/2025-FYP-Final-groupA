@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from skimage.util import random_noise
+from skimage.morphology import disk
 import random
 
 def apply_clahe(img):
@@ -31,3 +32,28 @@ def noise_augmentation(img):
     img_noisy = random_noise(img,var=0.1)
     img_noisy_uint8 = (img_noisy * 255).astype(np.uint8)
     return img_noisy_uint8
+
+def roughen_border(mask_input, max_perturb=5, n_points=200):
+    mask = mask_input.astype(np.uint8)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    if not contours:
+        return mask_input  # Return original if no contour found
+
+    contour = contours[0].squeeze()
+
+    # Perturb some contour points randomly
+    perturbed = contour.copy()
+    indices = np.random.choice(len(contour), size=n_points, replace=False)
+
+    for idx in indices:
+        dx = np.random.randint(-max_perturb, max_perturb + 1)
+        dy = np.random.randint(-max_perturb, max_perturb + 1)
+        perturbed[idx] = perturbed[idx][0] + dx, perturbed[idx][1] + dy
+
+    # Create new mask
+    new_mask = np.zeros_like(mask)
+    perturbed = perturbed.reshape((-1, 1, 2)).astype(np.int32)
+    cv2.drawContours(new_mask, [perturbed], -1, 1, thickness=-1)
+
+    return new_mask
