@@ -16,7 +16,7 @@ def random_forest(filepath, n_estimators: int = 100):
     #Only uses the estandarized values 
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
 
-    X, y      = df[feat_cols], df["Melanoma"]
+    X, y = df[feat_cols], df["Melanoma"]
     
     
     rows = []
@@ -45,6 +45,10 @@ def random_forest(filepath, n_estimators: int = 100):
             "F1":       f1_score(yte, ypred),
             "AUC":      roc_auc_score(yte, yprob)
         })
+
+        if __name__ == "__main__":
+            print("Confusion Matrix:")
+            print(confusion_matrix(yte, ypred))
     
     
     #Transforms values into data a frame
