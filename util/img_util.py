@@ -14,7 +14,10 @@ from .feature_A import get_asymmetry
 from .feature_B import getborder
 from .feature_C import get_irregularity_score
 
+from .augmentation import apply_clahe, roughen_border, noise_augmentation # REMEMBER TO FIX
+
 results = []
+df = pd.read_csv("data/metadata.csv")
 
 def readImageFile(file_path):
     # read image as an 8-bit array
@@ -58,13 +61,21 @@ def saveImageFile(img_rgb, file_path):
     except Exception as e:
         print(f"Error saving the image: {e}")
         return False
+    
+def is_melanoma(image_id):
+    row = df[df['img_id'] == image_id]
 
-
+    if not row.empty:
+        return row["diagnostic"].iloc[0].strip().upper() == "MEL"
+    else:
+        return False
+            
 class ImageDataLoader:
-    def __init__(self, directory, masks, hairless=None):
+    def __init__(self, directory, masks, hairless=None, augmentation=None):
         self.directory = directory
         self.masks = masks
         self.hairless = hairless
+        self.augmentation = augmentation
         self.file_list = sorted([os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', 'jpeg', '.bmp', '.tiff'))])
         self.mask_list = sorted([os.path.join(masks, f) for f in os.listdir(masks) if f.lower().endswith(('.png', '.jpg', 'jpeg', '.bmp', '.tiff'))])
         if not self.file_list:
@@ -99,31 +110,72 @@ class ImageDataLoader:
                 mask_path = find_mask(filename, self.mask_list, self.masks)
                 img_rgb, img_gray = readImageFile(filename)
 
-                if self.hairless:
-                    blackhat, tresh, img_rgb = removeHair(img_rgb, img_gray)
+                if self.augmentation:
+                    img_id = os.path.basename(filename)
+                    mel = is_melanoma(img_id)
 
-                manual_mask = get_binary_mask(mask_path)
+                    if mel:
+                    
+                        manual_mask = get_binary_mask(mask_path)
+                        mask = get_mask(img_rgb, manual_mask)
 
-                mask = get_mask(img_rgb, manual_mask)
+                        # Apply augmentation method to the img
+                        noise_img = noise_augmentation(img_rgb)
+                        noise_mask = mask
 
-                # Skip bad images where we couldn't compute a mask
-                if np.sum(mask) == 0:
-                    continue             
+                        contrast_img = apply_clahe(img_rgb)
+                        contrast_mask = get_mask(contrast_img, manual_mask)
+                        if np.sum(contrast_mask) == 0:
+                            contrast_mask = mask  # fallback if the mask is all black
 
-                # Compute the features
-                assymetry = get_asymmetry(mask)
-                _border = getborder(mask)
-                color = get_irregularity_score(img_rgb, mask)
 
-                yield filename, assymetry, _border, color
+                        extra_border_mask = roughen_border(mask)
+                        if np.sum(extra_border_mask) == 0:
+                            extra_border_mask = mask  # fallback
+                  
+                        # Compute the features for the augmented pictures
+                        assymetry_noise = get_asymmetry(noise_mask)
+                        _border_noise = getborder(noise_mask)
+                        color_noise = get_irregularity_score(noise_img, noise_mask)
 
-                #Save the new images on a different folder/path 
-                # dir_path = os.path.dirname(filename)
-                # new_dir = os.path.join(dir_path, "New")
-                # os.makedirs(new_dir, exist_ok=True)
-                # saveImageFile(img_rgb, os.path.join(new_dir, os.path.basename(filename)))
-                # mask_uint8 = (mask.astype(np.uint8)) * 255
-                # cv2.imwrite(os.path.join(new_dir, "MASK_" + os.path.basename(filename)), mask_uint8)
+                        assymetry_contrast = get_asymmetry(contrast_mask)
+                        _border_contrast = getborder(contrast_mask)
+                        color_contrast = get_irregularity_score(contrast_img, contrast_mask)
+
+                        assymetry_extra_border = get_asymmetry(extra_border_mask.astype(bool))
+                        _border_extra_border = getborder(extra_border_mask)
+                        color_extra_border = get_irregularity_score(img_rgb, extra_border_mask)
+
+                        yield img_id, assymetry_noise, _border_noise, color_noise, assymetry_contrast, _border_contrast, color_contrast, assymetry_extra_border, _border_extra_border, color_extra_border
+
+                    else:
+                        continue
+                else:
+                    if self.hairless:
+                        blackhat, tresh, img_rgb = removeHair(img_rgb, img_gray)
+
+                    manual_mask = get_binary_mask(mask_path)
+
+                    mask = get_mask(img_rgb, manual_mask)
+
+                    # Skip bad images where we couldn't compute a mask
+                    if np.sum(mask) == 0:
+                        continue             
+
+                    # Compute the features
+                    assymetry = get_asymmetry(mask)
+                    _border = getborder(mask)
+                    color = get_irregularity_score(img_rgb, mask)
+
+                    yield filename, assymetry, _border, color
+
+                    #Save the new images on a different folder/path 
+                    # dir_path = os.path.dirname(filename)
+                    # new_dir = os.path.join(dir_path, "New")
+                    # os.makedirs(new_dir, exist_ok=True)
+                    # saveImageFile(img_rgb, os.path.join(new_dir, os.path.basename(filename)))
+                    # mask_uint8 = (mask.astype(np.uint8)) * 255
+                    # cv2.imwrite(os.path.join(new_dir, "MASK_" + os.path.basename(filename)), mask_uint8)
 
             except Exception as e:
                 print(f"Error with image: {os.path.basename(filename)}. Error is {e}")
