@@ -152,7 +152,7 @@ class ImageDataLoader:
                         continue
                 else:
                     if self.hairless:
-                        blackhat, tresh, img_rgb = removeHair(img_rgb, img_gray)
+                        blackhat, tresh, img_rgb = removeHair(img_rgb, img_gray, kernel_size=5, threshold=10, radius=3)
 
                     manual_mask = get_binary_mask(mask_path)
 
