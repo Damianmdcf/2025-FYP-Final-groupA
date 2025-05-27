@@ -8,81 +8,75 @@ from sklearn.metrics import confusion_matrix
 import os
 from pathlib import Path
 
-droot= Path("data")
+droot = Path("data")  
 
-def logistic_regression(file_path, treshold):
-    df = pd.read_csv(file_path)
-
+def logistic_regression(filepath, treshold):
+    
+    df = pd.read_csv(filepath)
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
-    df= df.dropna(subset=feat_cols + ["Melanoma"]) 
+    df = df.dropna(subset=feat_cols + ["Melanoma"])  # Drop rows with NaN in specified columns
+    X= df[feat_cols]
+    y = df["Melanoma"]
 
+    #Only uses the estandarized values 
+    feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
 
-    features = df[feat_cols]
-    labels = df["Melanoma"]
+    X, y      = df[feat_cols], df["Melanoma"]
+    
+    rows = []
 
+    #Apply K folds top the data 
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    accs, f1s, aucs = [], [], []
-    fold_rows= []
+    #For each one of the folds, use the train and "test" data to return crucial values (aucs, f1s, etc) 
+    for fold, (tr, te) in enumerate(kf.split(X, y), start=1):
 
-    for fold, (train_index, test_index) in enumerate(kf.split(features, labels), 1):
+        Xtr, Xte = X.iloc[tr], X.iloc[te]
+        ytr, yte = y.iloc[tr], y.iloc[te]
+
+        #Starts a Decision tree classifier with the given max depth, train and fit one per fold 
+
+        clf = LogisticRegression()
+        clf.fit(Xtr, ytr)
+
+
+        yprob = clf.predict_proba(Xte)[:, 1]  # Get the predicted probability of the positive class for each test sample
+        ypred = (yprob > float(treshold)).astype(int)  # Classify as 1 if probability > threshold, else 0
         
-        X_train, X_test = features.iloc[train_index], features.iloc[test_index]
-        y_train, y_test = labels.iloc[train_index], labels.iloc[test_index]
+        #Appends all the crucial values to a list so we can retrieve them later 
+        rows.append({
+            "Model": f"Logistic Regression {treshold}",
+            "Fold":  fold,
+            "Accuracy": accuracy_score(yte, ypred),
+            "F1":       f1_score(yte, ypred),
+            "AUC":      roc_auc_score(yte, yprob)
+        })
 
-        model = LogisticRegression()
-        model.fit(X_train, y_train)
-
-        y_probs = model.predict_proba(X_test)[:, 1]
-        y_pred = (y_probs > float(treshold)).astype(int)
-
-        acc  = accuracy_score(y_test, y_pred)
-        f1   = f1_score(y_test, y_pred)
-        auc  = roc_auc_score(y_test, y_probs)
-
-        # save per-fold lists (for the summary)
-        accs.append(acc); f1s.append(f1); aucs.append(auc)
-
-        fold_rows.append({
-        "Model"      : f"logistic regression {treshold}",
-        "Fold"       : fold,
-        "Accuracy"   : round(acc, 3),
-        "F1"         : round(f1, 3),
-        "AUC"        : round(auc, 3)})
-
-    accuracy = np.mean(accs)
-    F1 = np.mean(f1s)
-    auc_mean = np.mean(aucs)
-    std_dev = np.std(aucs)
-
-    z = norm.ppf(0.975)
-    margin = z * std_dev / np.sqrt(kf.get_n_splits())
-    confidence_interval = (round(auc_mean - margin, 3), round(auc_mean + margin, 3))
-
-    per_fold_path = droot / "result-fold-metrics-extended.csv"
-
-    # wide = pd.DataFrame(fold_rows).pivot(index="Model", columns="Fold", values=["F1", "AUC"])
-    # wide.columns = [f"{m} fold {f}" for m, f in wide.columns]      # flatten names
-    # wide.reset_index().to_csv(per_fold_path,
-    #                        mode="a", index=False,
-    #                        header=not os.path.exists(per_fold_path))
-
-
-    result_df = pd.DataFrame([{
-        "Model": f"logistic regression {treshold}",
-        "Accuracy Mean": round(accuracy, 3),
-        "F1 Mean": round(F1, 3),
-        "AUC Mean": round(auc_mean, 3),
-        "AUC Std. Dev": round(std_dev, 3),
-        "AUC 95% CI": confidence_interval
-        }])
+        if __name__ == "__main__":
+                print("Confusion Matrix:")
+                print(confusion_matrix(yte, ypred))
     
-    # result_csv_path = droot / "result-hair-removal.csv"
-    # result_df.to_csv(result_csv_path, mode='a', index=False, header=not os.path.exists(result_csv_path))
-    print("Confusion Matrix:")
-    print(confusion_matrix(y_test, y_pred))
+    
+    #Transforms values into data a frame
+    per_fold = pd.DataFrame(rows).pivot( index="Model", columns="Fold", values=["Accuracy", "F1", "AUC"])
 
-    return result_df, aucs
+   
+    per_fold.columns = [f"{metric}_fold_{fold}" for metric, fold in per_fold.columns]
+    per_fold = per_fold.reset_index()
+    
+    # compute summary statistics
 
-file_path= droot / "train-extended-data.csv"
-logistic_regression(file_path, 0.01)
+    n_folds = 5
+    # mean for all the crucial values 
+    per_fold["Accuracy Mean"]= per_fold[[f"Accuracy_fold_{i}" for i in range(1, n_folds+1)]].mean(axis=1)
+    per_fold["F1 Mean"] = per_fold[[f"F1_fold_{i}"       for i in range(1, n_folds+1)]].mean(axis=1)
+    per_fold["AUC Mean"]= per_fold[[f"AUC_fold_{i}"      for i in range(1, n_folds+1)]].mean(axis=1)
+
+    # std dev of AUC
+    per_fold["AUC Std. Dev"]= per_fold[[f"AUC_fold_{i}" for i in range(1, n_folds+1)]].std(axis=1)
+
+    # 95% CI for AUC mean
+    z = norm.ppf(0.975)
+    per_fold["AUC 95% CI"]= per_fold.apply(lambda row: ( round(row["AUC Mean"] - z * row["AUC Std. Dev"] / np.sqrt(n_folds), 3), round(row["AUC Mean"] + z * row["AUC Std. Dev"] / np.sqrt(n_folds), 3)), axis=1)
+    
+    return per_fold
