@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedGroupKFold
 from scipy.stats import norm
 from sklearn.metrics import confusion_matrix
 import os
@@ -24,15 +25,30 @@ def knn(filepath, k, apply_smote= False, smote_ratio=0.3, k_neighbors=5, apply_u
     X= df[feat_cols]
     y = df["Melanoma"]
 
-    #Apply K folds top the data 
-    kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    groups = None
+
+    # check if we have augmented images or not
+    if "original_img_id" in df.columns: 
+        # we have augmented images, so we do StratifiedGroupKFold to keep all "versions" of an image in the same fold
+        kf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+        groups = df["original_img_id"]
+    else:
+        # no augmented images so we just run normal stratifiedKFold
+        kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
     rows = []
 
     #For each one of the folds, use the train and "test" data to return crucial values (aucs, f1s, etc) 
-    for fold, (tr, te) in enumerate(kf.split(X, y), start=1):
+    for fold, (tr, te) in enumerate(kf.split(X, y, groups=groups), start=1):
 
         Xtr, Xte = X.iloc[tr], X.iloc[te]
         ytr, yte = y.iloc[tr], y.iloc[te]
+
+        # if synthetic data is present then remove it from the validation set to avoid overfitting
+        if "is_synthetic" in df.columns:
+            val_mask = df.iloc[te]["is_synthetic"] == False
+            Xte = Xte[val_mask]
+            yte = yte[val_mask]
 
         #If apply_SMOTE = True, oversample train data using SMOTE, test data stays untouched
         if apply_smote:

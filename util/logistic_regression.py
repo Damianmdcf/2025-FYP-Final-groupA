@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedGroupKFold
 from scipy.stats import norm
 from sklearn.metrics import confusion_matrix
 import os
@@ -13,6 +14,8 @@ droot = Path("data")
 def logistic_regression(filepath, treshold):
     
     df = pd.read_csv(filepath)
+    # print(df)
+
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
     df = df.dropna(subset=feat_cols + ["Melanoma"])  # Drop rows with NaN in specified columns
     X= df[feat_cols]
@@ -21,20 +24,37 @@ def logistic_regression(filepath, treshold):
     #Only uses the estandarized values 
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
 
-    X, y      = df[feat_cols], df["Melanoma"]
+    X, y = df[feat_cols], df["Melanoma"]
+
+    groups = None
     
+    # check if we have augmented images or not
+    if "original_img_id" in df.columns: 
+        # we have augmented images, so we do StratifiedGroupKFold to keep all "versions" of an image in the same fold
+        kf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+        groups = df["original_img_id"]
+        # print("Doing data augmentation")
+    else:
+        # no augmented images so we just run normal stratifiedKFold
+        kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
     rows = []
 
-    #Apply K folds top the data 
-    kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
     #For each one of the folds, use the train and "test" data to return crucial values (aucs, f1s, etc) 
-    for fold, (tr, te) in enumerate(kf.split(X, y), start=1):
+    for fold, (tr, te) in enumerate(kf.split(X, y, groups=groups), start=1):
 
         Xtr, Xte = X.iloc[tr], X.iloc[te]
         ytr, yte = y.iloc[tr], y.iloc[te]
 
-        #Starts a Decision tree classifier with the given max depth, train andfit one per fold 
+        # if synthetic data is present then remove it from the validation set to avoid overfitting
+        if "is_synthetic" in df.columns:
+            old_Xte = Xte
+            val_mask = df.iloc[te]["is_synthetic"] == False
+            Xte = Xte[val_mask]
+            yte = yte[val_mask]
+            # print("Deleting synthetic data")
+
+        #Starts a Decision tree classifier with the given max depth, train and fit one per fold 
 
         clf = LogisticRegression()
         clf.fit(Xtr, ytr)
