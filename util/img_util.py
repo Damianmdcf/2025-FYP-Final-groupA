@@ -104,7 +104,7 @@ class ImageDataLoader:
         _border = getborder(mask)
         color = get_irregularity_score(img_rgb, mask)
 
-        return assymetry, _border, color, mask
+        return assymetry, _border, color, mask, img_rgb
 
     def __iter__(self):
         for filename in self.file_list:

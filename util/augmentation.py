@@ -7,7 +7,7 @@ import random
 def apply_clahe(img):
 
     # Convert to LAB and apply CLAHE only to lightness channel to add contrast in the picture
-    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
     l, a, b = cv2.split(lab) # SPlit the channels
 
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
