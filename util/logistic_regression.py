@@ -34,7 +34,7 @@ def logistic_regression(filepath, treshold):
         Xtr, Xte = X.iloc[tr], X.iloc[te]
         ytr, yte = y.iloc[tr], y.iloc[te]
 
-        #Starts a Decision tree classifier with the given max depth, train and fit one per fold 
+        #Starts a Decision tree classifier with the given max depth, train andfit one per fold 
 
         clf = LogisticRegression()
         clf.fit(Xtr, ytr)
