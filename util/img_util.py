@@ -16,9 +16,6 @@ from .feature_C import get_irregularity_score
 
 from .augmentation import apply_clahe, roughen_border, noise_augmentation # REMEMBER TO FIX
 
-results = []
-df = pd.read_csv("data/metadata.csv")
-
 def readImageFile(file_path):
     # read image as an 8-bit array
     img_bgr = cv2.imread(file_path)
@@ -62,13 +59,6 @@ def saveImageFile(img_rgb, file_path):
         print(f"Error saving the image: {e}")
         return False
     
-def is_melanoma(image_id):
-    row = df[df['img_id'] == image_id]
-
-    if not row.empty:
-        return row["diagnostic"].iloc[0].strip().upper() == "MEL"
-    else:
-        return False
             
 class ImageDataLoader:
     def __init__(self, directory, masks, hairless=None, augmentation=None):
@@ -81,6 +71,18 @@ class ImageDataLoader:
         if not self.file_list:
             raise ValueError("No image files found in the directory.")
         self.num_batches = len(self.file_list)
+
+        self.df = pd.read_csv("data/metadata.csv")
+        self.test_data = pd.read_csv('data/test-baseline-data.csv')
+        self.test_mel = list(self.test_data[self.test_data["Melanoma"] == 1]["img_id"])
+
+    def is_melanoma(self, image_id):
+        diagnostic = self.df.loc[self.df['img_id'] == image_id, "diagnostic"].iloc[0]
+        
+        if diagnostic == "MEL" and image_id not in self.test_mel:
+            return True
+        else:
+            return False
 
     def __len__(self):
         return self.num_batches
@@ -112,7 +114,7 @@ class ImageDataLoader:
 
                 if self.augmentation:
                     img_id = os.path.basename(filename)
-                    mel = is_melanoma(img_id)
+                    mel = self.is_melanoma(img_id)
 
                     if mel:
                     
@@ -128,10 +130,18 @@ class ImageDataLoader:
                         if np.sum(contrast_mask) == 0:
                             contrast_mask = mask  # fallback if the mask is all black
 
+                        # Save the new images on a different folder/path 
+                        # dir_path = os.path.dirname(filename)
+                        # new_dir = os.path.join(dir_path, "New")
+                        # os.makedirs(new_dir, exist_ok=True)
+                        # saveImageFile(img_rgb, os.path.join(new_dir, os.path.basename(filename)))
+                        # mask = (mask.astype(np.uint8)) * 255
+                        # cv2.imwrite(os.path.join(new_dir, "MASK_" + os.path.basename(filename)), mask)
 
                         extra_border_mask = roughen_border(mask)
                         if np.sum(extra_border_mask) == 0:
                             extra_border_mask = mask  # fallback
+
                   
                         # Compute the features for the augmented pictures
                         assymetry_noise = get_asymmetry(noise_mask)
@@ -169,13 +179,6 @@ class ImageDataLoader:
 
                     yield filename, assymetry, _border, color
 
-                    #Save the new images on a different folder/path 
-                    # dir_path = os.path.dirname(filename)
-                    # new_dir = os.path.join(dir_path, "New")
-                    # os.makedirs(new_dir, exist_ok=True)
-                    # saveImageFile(img_rgb, os.path.join(new_dir, os.path.basename(filename)))
-                    # mask_uint8 = (mask.astype(np.uint8)) * 255
-                    # cv2.imwrite(os.path.join(new_dir, "MASK_" + os.path.basename(filename)), mask_uint8)
 
             except Exception as e:
                 print(f"Error with image: {os.path.basename(filename)}. Error is {e}")

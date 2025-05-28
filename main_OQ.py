@@ -22,10 +22,10 @@ if __name__ == "__main__":
     i = 1
     for img_id, assymetry_noise, _border_noise, color_noise, assymetry_contrast, _border_contrast, color_contrast, assymetry_extra_border, _border_extra_border, color_extra_border in loader:
         print(f"Now loading: {img_id}")
-        rows.append({"img_id": f"noise_{img_id}", A: assymetry_noise, B: _border_noise, C: color_noise, "augmentation_type": "noise",})
-        rows.append({"img_id": f"contrast_{img_id}", A: assymetry_contrast, B: _border_contrast, C: color_contrast, "augmentation_type": "contrast",})
-        rows.append({"img_id": f"extra_border_{img_id}", A: assymetry_extra_border, B: _border_extra_border, C: color_extra_border, "augmentation_type": "extra_border",})
-        print(f"{i} done {52-i} to go")
+        rows.append({"img_id": f"NOISE_{img_id}", A: assymetry_noise, B: _border_noise, C: color_noise, "augmentation_type": "noise",})
+        rows.append({"img_id": f"CONTRAST_{img_id}", A: assymetry_contrast, B: _border_contrast, C: color_contrast, "augmentation_type": "contrast",})
+        rows.append({"img_id": f"EXTRA_BORDER_{img_id}", A: assymetry_extra_border, B: _border_extra_border, C: color_extra_border, "augmentation_type": "extra_border",})
+        print(f"{i} done {42-i} to go")
         i += 1
     
     df_features = pd.DataFrame(rows)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     df_features["Melanoma"] = 1
 
 
-    baseline_df = pd.read_csv("data/baseline-data-for-model.csv")
+    baseline_df = pd.read_csv("data/train-baseline-data.csv")
 
     # Make sure column order is the same in the two df's
     column_order = ["img_id", "Melanoma", "feature_a", "feature_b", "feature_c", "Z_feature_a", "Z_feature_b", "Z_feature_c", "augmentation_type" ]
@@ -44,4 +44,4 @@ if __name__ == "__main__":
     # Combine the two DataFrames
     combined_df = pd.concat([baseline_df, df_features], ignore_index=True)
 
-    combined_df.to_csv("data/OQ-data-for-model.csv", index=False)
+    combined_df.to_csv("data/train-OQ-data-for-model.csv", index=False)

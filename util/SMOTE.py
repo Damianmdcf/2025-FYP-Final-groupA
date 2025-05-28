@@ -89,15 +89,19 @@ def apply_smote_and_undersample(df, feature_cols, id_col, label_col,
 
 
 
+for k in [0.1, 0.2, 0.3, 0.4, 0.5]:
+    #Apply smote to trained data
+    df_smote= apply_smote_only(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma", sampling_ratio= k)
+    #save the data framework
+    df_smote.to_csv(f"../data/train-smote-data-{str(k).replace('.','')}.csv", index= False)
 
-#Apply smote to trained data
-df_smote= apply_smote_only(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma")
-#save the data framework
-df_smote.to_csv("../data/abc_features_smote.csv", index= False)
 
 
 
-#Apply smote and under_sampling
-df_smote_u= apply_smote_and_undersample(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma")
-df_smote_u.to_csv("../data/result-smote+ undersampling.csv", index= False)
+for k in [0.1, 0.2, 0.3, 0.4, 0.5]:
+    for j in [0.3, 0.5, 0.7]:
+    ##Apply smote and under_sampling
+        df_smote_u= apply_smote_and_undersample(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma", smote_ratio= k, under_ratio= j)
+    #save the data framework
+        df_smote_u.to_csv(f"../data/train-smote+under-sampling-data-{str(k).replace('.','')}.csv", index= False)
 
