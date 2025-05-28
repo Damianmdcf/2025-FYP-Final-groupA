@@ -37,9 +37,7 @@ def evaluate_all_models(file_path, out_path):
 droot = Path("data")
 datasets = [
     ("train-baseline-data.csv", "result-baseline-1.csv"),
-    ("train-extended-data.csv", "result-extended-1.csv"),
-    ("train-SMOTE-data.csv", "result-SMOTE-1.csv"),
-    ("train-SMOTE+undersampling-data.csv", "result-SMOTE+undersampling-data.csv")
+    ("train-extended-data.csv", "result-extended-1.csv")
 ]
 
 for in_file, out_file in datasets:
