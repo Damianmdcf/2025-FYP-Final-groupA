@@ -4,13 +4,15 @@ from imblearn.under_sampling import RandomUnderSampler
 from imblearn.pipeline import Pipeline
 from collections import Counter
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 #Resampling of the data, should be perfomered after data augmentation as we have very little melanoma cases
 #I created two functions, one uses only SMOT# [creating synthethic samples by interpolating between real minority samples] 
 #and the other applies both SMOTE on minority class and undersampling on majority class, have to decide which one works better
 
+droot = Path("data")
 
-df_abc= pd.read_csv("../data/train-baseline-data.csv")
+df_abc= pd.read_csv(droot / "train-baseline-data.csv")
 
 def clean_abc_data(df, feature_cols):
     #removing rows with missing values in any of the feature columns
@@ -23,7 +25,7 @@ df_clean= clean_abc_data(df_abc, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'])
 
 
 def apply_smote_only(df, feature_cols, id_col, label_col, sampling_ratio=0.3, k_neighbors=5):
-    #Undersamples the minority class using SMOTE [creating synthethic samples by interpolating between real minority samples]
+    #Oversamples the minority class using SMOTE [creating synthethic samples by interpolating between real minority samples]
     X = df[feature_cols].values
     y = df[label_col].values
     ids = df[id_col].values
@@ -34,7 +36,7 @@ def apply_smote_only(df, feature_cols, id_col, label_col, sampling_ratio=0.3, k_
     X_s, y_s = smote.fit_resample(X, y)
 
     #print the amount of samples of each class
-    print("After SMOTE:", Counter(y_s))
+    # print("After SMOTE:", Counter(y_s))
 
     #created a data frame with added samples
     df_s = pd.DataFrame([{
@@ -57,7 +59,7 @@ def apply_smote_and_undersample(df, feature_cols, id_col, label_col,
     y = df[label_col]
     ids = df[id_col].to_list()
 
-    #oversample the minority class using SMOTE, adds synenthis samples, #0.1, try to change k_values
+    #Oversample the minority class using SMOTE, adds synenthis samples, #0.1, try to change k_values
     smote = SMOTE(sampling_strategy=smote_ratio, k_neighbors=k_neighbors, random_state=42)
     X_smote, y_smote = smote.fit_resample(X, y)
 
@@ -78,7 +80,7 @@ def apply_smote_and_undersample(df, feature_cols, id_col, label_col,
     X_final, y_final= rus.fit_resample(X_smote, y_smote)
 
     #print the amount of samples after performing SMOTE and undersampling
-    print("After SMOTE + u:", Counter(y_final))
+    # print("After SMOTE + u:", Counter(y_final))
 
     final_indices= rus.sample_indices_
     df_final= df_smote.iloc[final_indices].copy()
@@ -86,22 +88,49 @@ def apply_smote_and_undersample(df, feature_cols, id_col, label_col,
     # Return the augmentanted dataframe
     return df_final
     
+def apply_undersampling(df, feature_cols, id_col, label_col, sampling_ratio=0.5, k_neighbors=5):
+    #Undersamples the majority class, ranodmly removes non-melanoma cases
+    X = df[feature_cols].values
+    y = df[label_col].values
+    ids = df[id_col].values
+
+    #appplying Random under-sampling
+    rus = RandomUnderSampler(sampling_strategy=sampling_ratio, k_neighbors=k_neighbors, random_state=42)
+    X_s, y_s = rus.fit_resample(X, y)
+
+    #print the amount of samples of each class
+    # print("After SMOTE:", Counter(y_s))
+
+    #created a data frame with added samples
+    df_s = pd.DataFrame([{
+    'img_id': ids[i] if i < len(ids) else f'synthetic_{i - len(ids)}',
+    'Melanoma': y_s[i],
+    'Z_feature_a': X_s[i][0],
+    'Z_feature_b': X_s[i][1],
+    'Z_feature_c': X_s[i][2]
+    } for i in range(len(X_s))])
 
 
-
-for k in [0.1, 0.3]:
-    #Apply smote to trained data
-    df_smote= apply_smote_only(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma", sampling_ratio= k)
-    #save the data framework
-    # df_smote.to_csv(f"../data/train-smote-data-{str(k).replace('.','')}.csv", index= False)
+    return df_s
 
 
+# for k in [0.3]:
+#     #Apply smote to trained data
+#     df_smote= apply_smote_only(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma", sampling_ratio= k)
+#     #save the data framework
+#     df_smote.to_csv(droot/ "train-smote-data-extended.csv", index= False)
 
 
-for k in [0.1, 0.3]:
-    for j in [0.3, 0.5]:
-    ##Apply smote and under_sampling
-        df_smote_u= apply_smote_and_undersample(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma", smote_ratio= k, under_ratio= j)
-    #save the data framework
-        # df_smote_u.to_csv(f"../data/train-smote+under-sampling-data-{str(k)}-{str(j)}.csv", index= False)
+# for k in [0.3]:
+#     for j in [0.5]:
+#     ##Apply smote and under_sampling
+#         df_smote_u= apply_smote_and_undersample(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma", smote_ratio= k, under_ratio= j)
+#     #save the data framework
+#         df_smote_u.to_csv(droot / "train-smote+under-sampling-data-.csv", index= False)
 
+
+# for k in [0.5]:
+#     #Apply smote to trained data
+#     df_smote= apply_smote_only(df_clean, ['Z_feature_a', 'Z_feature_b', 'Z_feature_c'], "img_id", "Melanoma", sampling_ratio= k)
+#     #save the data framework
+#     df_smote.to_csv(droot/ "train-under-data.csv", index= False)
