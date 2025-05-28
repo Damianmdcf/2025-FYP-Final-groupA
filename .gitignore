@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 
 #DS Store
-.DS_Store
+.DS_Store.ipynb_checkpoints/
