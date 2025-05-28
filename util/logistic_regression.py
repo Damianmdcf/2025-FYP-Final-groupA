@@ -66,7 +66,7 @@ def logistic_regression(filepath, treshold, apply_smote= False, smote_ratio=0.3,
             rus = RandomUnderSampler(sampling_strategy=under_ratio, random_state=42)
             Xtr, ytr= rus.fit_resample(Xtr, ytr)
 
-        #Starts a Decision tree classifier with the given max depth, train and fit one per fold 
+        #Starts a Logistic Regression classifier with the given max depth, train and fit one per fold 
 
         clf = LogisticRegression()
         clf.fit(Xtr, ytr)
