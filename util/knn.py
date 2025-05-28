@@ -36,7 +36,7 @@ def knn(filepath, k, apply_smote= False, smote_ratio=0.3, k_neighbors=5, apply_u
 
         #If apply_SMOTE = True, oversample train data using SMOTE, test data stays untouched
         if apply_smote:
-            sm= SMOTE(sampling_strategy=sampling_strategy, k_neighbors=k_neighbors,random_state= 42)
+            sm= SMOTE(sampling_strategy=smote_ratio, k_neighbors=k_neighbors,random_state= 42)
             Xtr, ytr= sm.fit_resample(Xtr, ytr)
         
         #If apply_undersampling = True, oundersample train data using Random Under sampling, test data stays untouched
