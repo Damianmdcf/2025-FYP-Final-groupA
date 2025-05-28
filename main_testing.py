@@ -64,4 +64,9 @@ def main(train_csv, test_csv, result_path, threshold=0.03):
 
 
 
-if 
+if __name__ == "__main__":
+    train_csv = "data/train-extended-data.csv"
+    test_csv = "data/test-extended-data.csv"
+    result_path = "result/results_extended"
+
+    main(train_csv, test_csv, result_path)
