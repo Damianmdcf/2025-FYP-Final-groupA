@@ -6,17 +6,20 @@ from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix
 from scipy.stats import norm             
 from pathlib import Path
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
+
 
 
 droot = Path("data")  
 
-def random_forest(filepath, n_estimators: int = 100):
+def random_forest(filepath, n_estimators: int = 100, apply_smote=False, smote_ratio=0.3, k_neighbors=5, apply_undersampling= False, under_ratio=0.5):
     
     df = pd.read_csv(filepath)
-
-    #Only uses the estandarized values 
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
-
+    df = df.dropna(subset=feat_cols + ["Melanoma"]) 
+    
+    #Only uses the estandarized values 
     X, y = df[feat_cols], df["Melanoma"]
 
     groups = None
@@ -43,6 +46,16 @@ def random_forest(filepath, n_estimators: int = 100):
             val_mask = df.iloc[te]["is_synthetic"] == False
             Xte = Xte[val_mask]
             yte = yte[val_mask]
+        
+        #If apply_SMOTE = True, oversample train data using SMOTE, test data stays untouched
+        if apply_smote:
+            sm= SMOTE(sampling_strategy=smote_ratio, k_neighbors=k_neighbors,random_state= 42)
+            Xtr, ytr= sm.fit_resample(Xtr, ytr)
+        
+        #If apply_undersampling = True, oundersample train data using Random Under sampling, test data stays untouched
+        if apply_undersampling:
+            rus = RandomUnderSampler(sampling_strategy=under_ratio, random_state=42)
+            Xtr, ytr= rus.fit_resample(Xtr, ytr)
 
         #Starts a Random forest classifier, train and fit one per fold 
         clf = RandomForestClassifier( max_depth=5, n_estimators=n_estimators, random_state=0)

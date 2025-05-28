@@ -8,10 +8,12 @@ from scipy.stats import norm
 from sklearn.metrics import confusion_matrix
 import os
 from pathlib import Path
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 
 droot = Path("data")  
 
-def logistic_regression(filepath, treshold):
+def logistic_regression(filepath, treshold, apply_smote= False, smote_ratio=0.3, k_neighbors=5, apply_undersampling= False, under_ratio=0.5):
     
     df = pd.read_csv(filepath)
     # print(df)
@@ -53,6 +55,16 @@ def logistic_regression(filepath, treshold):
             Xte = Xte[val_mask]
             yte = yte[val_mask]
             # print("Deleting synthetic data")
+        
+        #If apply_SMOTE = True, oversample train data using SMOTE, test data stays untouched
+        if apply_smote:
+            sm= SMOTE(sampling_strategy=smote_ratio, k_neighbors=k_neighbors,random_state= 42)
+            Xtr, ytr= sm.fit_resample(Xtr, ytr)
+        
+        #If apply_undersampling = True, oundersample train data using Random Under sampling, test data stays untouched
+        if apply_undersampling:
+            rus = RandomUnderSampler(sampling_strategy=under_ratio, random_state=42)
+            Xtr, ytr= rus.fit_resample(Xtr, ytr)
 
         #Starts a Decision tree classifier with the given max depth, train and fit one per fold 
 
