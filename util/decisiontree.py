@@ -46,6 +46,9 @@ def decision_tree(filepath: str, max_depth_given):
             "F1":       f1_score(yte, ypred),
             "AUC":      roc_auc_score(yte, yprob)
         })
+
+        print(f"Confusion Matrix, Random Forest {max_depth_given}")
+        print(confusion_matrix(yte, ypred))
     
     
     #Transforms values into data a frame

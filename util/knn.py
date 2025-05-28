@@ -50,9 +50,8 @@ def knn(filepath, k):
             "AUC":      roc_auc_score(yte, yprob)
         })
 
-        if __name__ == "__main__":
-                print("Confusion Matrix:")
-                print(confusion_matrix(yte, ypred))
+        print(f"Confusion Matrix, KNN {k}")
+        print(confusion_matrix(yte, ypred))
     
     
     #Transforms values into data a frame

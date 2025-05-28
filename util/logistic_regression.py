@@ -52,9 +52,9 @@ def logistic_regression(filepath, treshold):
             "AUC":      roc_auc_score(yte, yprob)
         })
 
-        if __name__ == "__main__":
-                print("Confusion Matrix:")
-                print(confusion_matrix(yte, ypred))
+        print(f"Confusion Matrix, Logistic Regression {treshold}")
+        print(confusion_matrix(yte, ypred))
+        
     
     
     #Transforms values into data a frame

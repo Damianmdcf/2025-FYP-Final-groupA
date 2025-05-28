@@ -46,9 +46,8 @@ def random_forest(filepath, n_estimators: int = 100):
             "AUC":      roc_auc_score(yte, yprob)
         })
 
-        if __name__ == "__main__":
-            print("Confusion Matrix:")
-            print(confusion_matrix(yte, ypred))
+        print(f"Confusion Matrix, Random Forest {n_estimators}")
+        print(confusion_matrix(yte, ypred))
     
     
     #Transforms values into data a frame
