@@ -90,7 +90,7 @@ def knn(filepath, k, apply_smote= False, smote_ratio=0.3, k_neighbors=5, apply_u
 #         result_df_knn.to_csv(out_csv, mode='a', index=False, header=not os.path.exists(out_csv))
 
 
-for k in (1, 3, 5, 7):
-        result_df_knn= knn((droot / "train-baseline-data.csv"), k, apply_smote= True, smote_ratio=0.3, k_neighbors=5, apply_undersampling= True, under_ratio=0.5) 
-        out_csv = droot / "result-smote+undersampling.csv"
-        result_df_knn.to_csv(out_csv, mode='a', index=False, header=not os.path.exists(out_csv))
+# for k in (1, 3, 5, 7):
+#         result_df_knn= knn((droot / "train-baseline-data.csv"), k, apply_smote= True, smote_ratio=0.3, k_neighbors=5, apply_undersampling= True, under_ratio=0.5) 
+#         out_csv = droot / "result-smote+undersampling.csv"
+#         result_df_knn.to_csv(out_csv, mode='a', index=False, header=not os.path.exists(out_csv))
