@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from statsmodels.stats.inter_rater import fleiss_kappa
 
-df = pd.read_csv("../annotations/annotations.csv")
+df = pd.read_csv("annotations/annotations.csv")
 
 df = df.drop(columns=["img_id"])
 

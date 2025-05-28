@@ -17,7 +17,6 @@ def compute_hair_score(thresh_mask, high_thresh=0.3):
 
     #Calculate the proportion of image covered in hair 
     hair_ratio = hair_pixels / total_pixels
-    print(hair_ratio)
 
     if hair_ratio < 0.001: #set to zero, as we agreed we say ) if and only if there is not a single hair in the pic
         return 0
