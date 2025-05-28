@@ -45,11 +45,11 @@ droot = Path("data")
 #     out_path = droot / out_file
 #     evaluate_all_models(file_path, out_path)
 
-datasets_OQ = [
-    ("train-baseline-data.csv", "result-baseline-smote+under-sampling-0.3_0.5.csv")]
+# datasets_OQ = [
+#     ("train-baseline-data.csv", "result-baseline-under-sampling-0.5.csv")]
 
-for in_file, out_file in datasets_OQ:
-    file_path = droot / in_file
-    out_path = droot / out_file
-    evaluate_all_models(file_path, out_path,  apply_smote= True, smote_ratio=0.3, apply_undersampling= True, under_ratio= 0.5)
+# for in_file, out_file in datasets_OQ:
+#     file_path = droot / in_file
+#     out_path = droot / out_file
+#     evaluate_all_models(file_path, out_path, apply_undersampling= True, under_ratio= 0.5)
 
