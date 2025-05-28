@@ -8,11 +8,12 @@ from sklearn.metrics import confusion_matrix
 import os
 from pathlib import Path
 from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 
 droot= Path("data")
 
 
-def knn(filepath, k, apply_smote= False, sampling_strategy=0.3, k_neighbors=5):
+def knn(filepath, k, apply_smote= False, smote_ratio=0.3, k_neighbors=5, apply_undersampling= False, under_ratio=0.5):
     
     df = pd.read_csv(filepath)
     feat_cols = ["Z_feature_a", "Z_feature_b", "Z_feature_c"]
@@ -33,9 +34,15 @@ def knn(filepath, k, apply_smote= False, sampling_strategy=0.3, k_neighbors=5):
         Xtr, Xte = X.iloc[tr], X.iloc[te]
         ytr, yte = y.iloc[tr], y.iloc[te]
 
+        #If apply_SMOTE = True, oversample train data using SMOTE, test data stays untouched
         if apply_smote:
             sm= SMOTE(sampling_strategy=sampling_strategy, k_neighbors=k_neighbors,random_state= 42)
             Xtr, ytr= sm.fit_resample(Xtr, ytr)
+        
+        #If apply_undersampling = True, oundersample train data using Random Under sampling, test data stays untouched
+        if apply_undersampling:
+            rus = RandomUnderSampler(sampling_strategy=under_ratio, random_state=42)
+            Xtr, ytr= rus.fit_resample(Xtr, ytr)
 
         #Starts a KNN classifier, train and fit one per fold 
         clf = KNeighborsClassifier(n_neighbors=k)
@@ -81,3 +88,9 @@ def knn(filepath, k, apply_smote= False, sampling_strategy=0.3, k_neighbors=5):
 #         result_df_knn= knn((droot / "train-baseline-data.csv"), k, True) 
 #         out_csv = droot / "result-smote.csv"
 #         result_df_knn.to_csv(out_csv, mode='a', index=False, header=not os.path.exists(out_csv))
+
+
+for k in (1, 3, 5, 7):
+        result_df_knn= knn((droot / "train-baseline-data.csv"), k, apply_smote= True, smote_ratio=0.3, k_neighbors=5, apply_undersampling= True, under_ratio=0.5) 
+        out_csv = droot / "result-smote+undersampling.csv"
+        result_df_knn.to_csv(out_csv, mode='a', index=False, header=not os.path.exists(out_csv))
