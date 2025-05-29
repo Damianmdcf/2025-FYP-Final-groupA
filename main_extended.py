@@ -47,8 +47,6 @@ if __name__ == "__main__":
         # add the ABC features to the rows list
         rows.append({"img_id": img_id, A: assymetry, B: _border, C: color})
         print(f"{i} done {len(loader.file_list)-i} to go")
-        if i == 5:
-            break
         i += 1
 
     # Create a dataframe with all feature data
