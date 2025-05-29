@@ -1,8 +1,13 @@
 import pandas as pd
+import os
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix, classification_report, precision_score, recall_score, roc_curve
 
-def main(train_csv, test_csv, result_path, threshold=0.03):
+def testing(train_csv, test_csv, result_path, threshold=0.03):
+    """
+    Logistic regression was the best classifier for baseline, extended and smote traning data.
+    We use the this function to fit the classifer again and then test on the held out testing data.
+    """
     # Load CSVs for training and testing
     train_df = pd.read_csv(train_csv)
     test_df = pd.read_csv(test_csv)
@@ -40,8 +45,6 @@ def main(train_csv, test_csv, result_path, threshold=0.03):
     cm = confusion_matrix(y_test, y_pred)
     tn, fp, fn, tp = cm.ravel()
 
-    print("\nClassification Report:\n", classification_report(y_test, y_pred))
-
     # Save prediction results to csv
     result_df = test_df[["img_id"]].copy()
     result_df["true_label"] = y_test
@@ -61,12 +64,3 @@ def main(train_csv, test_csv, result_path, threshold=0.03):
     }
     metrics_df = pd.DataFrame([metrics])
     metrics_df.to_csv(f"{result_path}_metrics.csv", index=False)
-
-
-
-if __name__ == "__main__":
-    train_csv = "data/train-extended-data.csv"
-    test_csv = "data/test-extended-data.csv"
-    result_path = "result/results_extended"
-
-    main(train_csv, test_csv, result_path)

@@ -1,72 +1,29 @@
-# Projects in Data Science (2025)
-
-Final Assignment
-
-
-
-#### Overview
-
-This is a template repository for the final assignment of course "Projects in Data Science." You should refer to this repository in your final hand-in.
-
-If using github.itu.dk, you need to download the repository and make your own. 
-
-If you are using general Github, you can clone or fork the repository directly. If your usernames do not give sufficient hints as to who you are, you can tell the TAs how to match them. 
-
-Your repository MUST be named 2025-FYP-groupXX where XX is your group number. 
-
-Look at the slides of the previous two weeks for details of the hand-in. 
-
-
-
-#### Python environment
-
-Follow TA instructions when setting up the Python environment before running any code. Remember to export your Python library requirements by `pip freeze > requirements.txt` and attach it to the repo so we can evaluate your scripts.
-
-
-
-#### File Hierarchy
-
-The file hierarchy of your hand-in repo should be as follows:
-
+# Group Anchovies
+## How to run the model
+1. Create a .env in the root folder
+2. Add 2 variables to the .env exactly like shown below. The values should be the absolute path to the location on your computer, where the images you want to test on are located.
+```python
+IMAGE_DATA_URL_LOCAL = "/Users/yourname/Documents/itu/projects_in_ds/final-assignment/images"
+MASK_DATA_URL_LOCAL = "/Users/yourname/Documents/itu/projects_in_ds/final-assignment/masks"
 ```
-2025-FYP/
-├── data/               # unzip the dataset and put it here (remove in your hand-in)
-│   ├── img_001.jpg
-│   ......
-│   └── img_XXX.jpg
-│ 
-├── util/
-│   ├── __init__.py
-│   ├── img_util.py     # basic image read and write functions
-│   ├── inpaint.py      # image inpainting function
-│   ├── feature_A.py    # code for feature A extraction
-│   ├── feature_B.py    # code for feature B extraction
-│   ├── feature_C.py    # code for feature C extraction
-│   ......
-│   └── classifier.py   # code for training, validating, and testing the classifier
-│ 
-├── result/
-│   ├── result_baseline.csv      # your results on the baseline setup
-│   ├── result_extended.csv      # your results on the extended setup
-│   └── report.pdf      		 # your report in PDF
-│ 
-├── main_demo.py		# demo script (reference setup, remove in your hand-in)
-├── main_baseline.py	# complete script (baseline setup)
-├── main_extended.py	# complete script (extended setup)
-├── dataset.csv    		# all image file names, ground-truth labels, and chosen features
-└── README.md
-```
+3. If you don't have any premade annotated masks, like we had for training the models, please still create the MASK_DATA_URL_LOCAL variable and set it equal to None.
+4. Make sure the images in your folder have the following naming convention:
+    - Image names start with 'PAT_' followed by the img_id. E.g. PAT_9_17_80.png.
+    - Maks names (if you have any) start with 'PAT_' followed by the img_id + _mask. E.g. PAT_9_17_80_mask.png.
+4. In order to succesfully test the model you also need to add the labels of your images. 
+    - In the 'data' folder replace the 'metadata.csv' file with your label data. It's very important that you do not rename the file. 'metadata.csv' just needs these exact two columns: 'img_id' and 'diagnostic'. Where MEL is melanoma.
+    - Example:
 
+      | img_id       | diagnostic |
+      |--------------|------------|
+      | 9_17_80      | MEL        |
+      | 2_03_45      | NEV        |
+      | 7_12_33      | MEL        |
+      | 4_22_11      | BKL        |
 
-
-**Notes:**
-
-1. DO NOT upload your data (images) to Github.
-2. When the same code block needs to be executed multiple times in the script, make it a custom function instead. All the custom functions and modules, such as image read and write, should be grouped into different files under the *"util"* subfolder, based on the task they are designed for. Do not put everything in a single Python file or copy-paste the same code block across the script.
-
-
-
-
-
-
-
+### Group members:
+- Asta Trier Wang
+- Bruno Alessandro Damian Modica Figueira
+- Jan Peter Cardell
+- Maja Kalina Oska
+- Philip Münster-Hansen
