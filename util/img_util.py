@@ -114,6 +114,9 @@ class ImageDataLoader:
                     if np.sum(extra_border_mask) == 0:
                         extra_border_mask = mask  # fallback
 
+                    assymetry = get_asymmetry(mask)
+                    _border = getborder(mask)
+                    color = get_irregularity_score(img_rgb, mask)
                 
                     # Compute the features for the augmented pictures
                     assymetry_noise = get_asymmetry(noise_mask)
@@ -128,22 +131,22 @@ class ImageDataLoader:
                     _border_extra_border = getborder(extra_border_mask)
                     color_extra_border = get_irregularity_score(img_rgb, extra_border_mask)
 
-                    return img_id, img_rgb, manual_mask, mask, assymetry_noise, _border_noise, color_noise, assymetry_contrast, _border_contrast, color_contrast, assymetry_extra_border, _border_extra_border, color_extra_border
+                    return img_id, img_rgb, manual_mask, mask, noise_img, contrast_img, contrast_mask, extra_border_mask, assymetry, _border, color, assymetry_noise, _border_noise, color_noise, assymetry_contrast, _border_contrast, color_contrast, assymetry_extra_border, _border_extra_border, color_extra_border
 
             else:
                 if self.hairless:
-                    blackhat, tresh, img_rgb = removeHair(img_rgb, img_gray, kernel_size=5, threshold=10, radius=3)
+                    blackhat, tresh, img_rgb_hairless = removeHair(img_rgb, img_gray, kernel_size=25, threshold=10, radius=3)
 
                 manual_mask = get_binary_mask(mask_path)
 
-                mask = get_mask(img_rgb, manual_mask)         
+                mask = get_mask(img_rgb, manual_mask)      
 
                 # Compute the features
                 assymetry = get_asymmetry(mask)
                 _border = getborder(mask)
                 color = get_irregularity_score(img_rgb, mask)
 
-                return img_id, assymetry, _border, color
+                return img_id, img_rgb, tresh, img_rgb_hairless, manual_mask, mask, assymetry, _border, color
             
         except Exception as e:
             print(f"Error with image: {os.path.basename(img_id)}. Error is {e}")
