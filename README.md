@@ -22,7 +22,7 @@ MASK_DATA_URL_LOCAL = "/Users/yourname/Documents/itu/projects_in_ds/final-assign
       | 4_22_11      | BKL        |
 
 ### Group members:
-- Asta Asta Trier Wang
+- Asta Trier Wang
 - Bruno Alessandro Damian Modica Figueira
 - Jan Peter Cardell
 - Maja Kalina Oska
