@@ -2,7 +2,8 @@
 
 Final Assignment
 
-
+- .dot
+- data/metadata
 
 #### Overview
 

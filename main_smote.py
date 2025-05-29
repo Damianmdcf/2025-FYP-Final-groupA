@@ -1,17 +1,19 @@
 import os
 from util.testing import testing
-from dotenv import load_dotenv
-load_dotenv()
-
-images_path = os.getenv("IMAGE_DATA_URL_LOCAL")
-mask_path = os.getenv("MASK_DATA_URL_LOCAL")
 
 if __name__ == "__main__":
+    """
+    Run this file to test your data on our SMOTE classifier from our open question.
+    OBS: Make sure to run the main_baseline.py file first to compute the ABC features for your images.
+    """
     if os.path.exists("data/final_baseline_features.csv"):
+        # smote traning data path
         train_csv = "data/train-smote-data.csv"
+        # your test data path computed by running main_baseline.py
         test_csv = "data/final_baseline_features.csv"
+        # path where the results will be stored
         result_path = "result/final_smote"
-
+        # run the SMOTE classifier on your test data
         testing(train_csv, test_csv, result_path, threshold=0.3)
 
         print("The predictions of the dataset has been saved in the folder 'result' under the name 'final_smote_predictions.csv'")
