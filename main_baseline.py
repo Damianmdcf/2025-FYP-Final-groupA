@@ -1,12 +1,7 @@
 import os
 import pandas as pd
-
-
-import matplotlib.pyplot as plt
-from util.feature_A import crop
-
-
 from util.img_util import ImageDataLoader
+from util.testing import testing
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,26 +9,16 @@ images_path = os.getenv("IMAGE_DATA_URL_LOCAL")
 mask_path = os.getenv("MASK_DATA_URL_LOCAL")
 
 if __name__ == "__main__":
+    ### COMPUTE ABC FEATURES:
     loader = ImageDataLoader(images_path, mask_path, hairless = False)
-    # error_image = "PAT_1022_115_132.png"
-    # assymetry, _border, color, mask = loader.one_image(error_image)
-    # cropped = crop(mask)
-    # plt.imshow(mask)
-    # plt.title("Mask Preview")
-    # plt.axis('off')  # optional: hides axis ticks
-    # plt.show()
 
-
-    df = pd.DataFrame(columns=["img_id", "Label"])
+    df = pd.DataFrame(columns=["img_id", "Melanoma"])
     metadata = pd.read_csv("data/metadata.csv")
     df["img_id"] = metadata["img_id"]
     df["Melanoma"] = metadata["diagnostic"]
 
     cancer = ["MEL"]
     df["Melanoma"] = df["Melanoma"].isin(cancer).astype(int)
-
-    # print("Please input feature version suffix:")
-    # version_suffix = input()
 
     rows = []
 
@@ -46,7 +31,9 @@ if __name__ == "__main__":
         img_id = os.path.basename(filename)
         print(f"Now loading: {img_id}")
         rows.append({"img_id": img_id, A: assymetry, B: _border, C: color})
-        print(f"{i} done {2297-i} to go")
+        print(f"{i} done {len(loader.file_list)-i} to go")
+        if i == 5:
+            break
         i += 1
     
     df_features = pd.DataFrame(rows)
@@ -55,4 +42,13 @@ if __name__ == "__main__":
     df_features["Z_" + C] = (df_features[C] - df_features[C].mean()) / df_features[C].std()
 
     df_merged = pd.merge(df, df_features, on="img_id", how="outer")
-    df_merged.to_csv("data/baseline-data-for-model.csv", index=False)
+
+    # Store the ABC features
+    test_data_path = "data/final_baseline_features.csv"
+    df_merged.to_csv(test_data_path, index=False)
+    print(f"Your features has been saved in the data folder under the name '{test_data_path}'")
+
+    testing("data/train-baseline-data.csv", test_data_path, "result/final_baseline", threshold=0.03)
+
+    print("The predictions of the dataset has been saved in the folder 'result' under the name 'final_baseline_predictions.csv'")
+    print("The metrics of the dataset has been saved in the folder 'result' under the name 'final_baseline_metrics.csv'")

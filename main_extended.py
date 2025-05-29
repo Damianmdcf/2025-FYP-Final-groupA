@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from util.img_util import ImageDataLoader
+from util.testing import testing
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -8,6 +9,7 @@ images_path = os.getenv("IMAGE_DATA_URL_LOCAL")
 mask_path = os.getenv("MASK_DATA_URL_LOCAL")
 
 if __name__ == "__main__":
+    ### COMPUTE ABC FEATURES:
     loader = ImageDataLoader(images_path, mask_path, hairless = True)
 
     df = pd.DataFrame(columns=["img_id", "Melanoma"])
@@ -29,7 +31,9 @@ if __name__ == "__main__":
         img_id = os.path.basename(filename)
         print(f"Now loading: {img_id}")
         rows.append({"img_id": img_id, A: assymetry, B: _border, C: color})
-        print(f"{i} done {2297-i} to go")
+        print(f"{i} done {len(loader.file_list)-i} to go")
+        if i == 5:
+            break
         i += 1
     
     df_features = pd.DataFrame(rows)
@@ -38,4 +42,13 @@ if __name__ == "__main__":
     df_features["Z_" + C] = (df_features[C] - df_features[C].mean()) / df_features[C].std()
 
     df_merged = pd.merge(df, df_features, on="img_id", how="outer")
-    df_merged.to_csv("data/extended-data-for-model.csv", index=False)
+
+    # Store the ABC features
+    test_data_path = "data/final_extended_features.csv"
+    df_merged.to_csv(test_data_path, index=False)
+    print(f"Your features has been saved in the data folder under the name '{test_data_path}'")
+
+    testing("data/train-extended-data.csv", test_data_path, "result/final_extended", threshold=0.03)
+
+    print("The predictions of the dataset has been saved in the folder 'result' under the name 'final_extended_predictions.csv'")
+    print("The metrics of the dataset has been saved in the folder 'result' under the name 'final_extended_metrics.csv'")

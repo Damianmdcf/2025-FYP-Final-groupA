@@ -5,10 +5,13 @@ from skimage.morphology import disk
 import random
 
 def apply_clahe(img):
+    """
+    Apply CLAHE augmentation to image
+    """
 
     # Convert to LAB and apply CLAHE only to lightness channel to add contrast in the picture
     lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-    l, a, b = cv2.split(lab) # SPlit the channels
+    l, a, b = cv2.split(lab) # Split the channels
 
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
     cl = clahe.apply(l) # Applies CLAHE only to to lightness channel
@@ -19,47 +22,49 @@ def apply_clahe(img):
 
     return img_clahe
 
-def apply_flip(img, mask=None):
-
-    code = random.randint(-1, 1) # -1: flip vertically, 0: flip horizontally, 1: flip both
-
-    flipped_img = cv2.flip(img, code)
-    flipped_mask = cv2.flip(mask, code) if mask is not None else None
-    
-    return flipped_img, flipped_mask
-
 def noise_augmentation(img):
+    """
+    Apply gaussian noise augmentation
+    """
+    # Add the random noise with a variance 0.1
     img_noisy = random_noise(img,var=0.1)
+    # Turn the image back into an 8-bit image
     img_noisy_uint8 = (img_noisy * 255).astype(np.uint8)
+
     return img_noisy_uint8
 
 def roughen_border(mask_input, max_perturb=5, n_points=200):
+    """
+    Apply a more jagged border to the mask of the image.
+    n_point number of pixel will at random be found on the border of the lesion mask.
+    Each of the pixels will then be moved at random a distance of max_perturb in any direction.
+    Finally a new contour will be found, to compute a new mask with the newly randomly moved points,
+    which results in a more jagged border of the mask.
+    """
+    # Turn the image into an 8-bit image
     mask = mask_input.astype(np.uint8)
+    # Get the contour (i.e. border) of the image
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+    # fallback if no contour could be found
     if not contours:
-        # print(f"Debug roughen_border: No contours found for a mask with sum {np.sum(mask_input)}")
         return mask_input  # Return original if no contour found
 
-    # Consider using the largest contour if multiple are found, though RETR_EXTERNAL often gives one main one.
+    # Shouldn't happen, but if multiple contours are found, we use only the biggest one
     contour = max(contours, key=cv2.contourArea) 
     
-    # Squeeze might be problematic if contour has only 1 point.
-    # Check number of points in the contour.
-    # contour is typically of shape (num_points, 1, 2).
+    # get the number of points on the contour
     num_contour_points = contour.shape[0]
-
+    
+    # fallback if the contour is empty
     if num_contour_points == 0:
-        # print("Debug roughen_border: Contour found but has 0 points.")
         return mask_input # Should not happen if contours list is not empty, but good check
 
     # Adjust n_points if it's larger than the available contour points
     actual_n_points_to_sample = min(n_points, num_contour_points)
 
+    # another fallback
     if actual_n_points_to_sample == 0 : # e.g. if n_points was 0 or num_contour_points was 0
-        # print("Debug roughen_border: No points to sample for perturbation.")
-        return mask_input
-
+        return mask_input # again, this shouldn't happen
 
     # Perturb some contour points randomly
     # Squeeze the contour after ensuring it's valid and we know num_contour_points
@@ -68,24 +73,27 @@ def roughen_border(mask_input, max_perturb=5, n_points=200):
     if contour_squeezed.ndim == 1 and num_contour_points == 1:
         contour_squeezed = contour_squeezed.reshape(1, 2)
 
-
     perturbed = contour_squeezed.copy() # Use the squeezed version
     
     # Sample indices from the available contour points
-    # Ensure replace=False is only used if actual_n_points_to_sample <= num_contour_points (which it is by min())
     indices = np.random.choice(num_contour_points, size=actual_n_points_to_sample, replace=False)
 
+    # go trough each of the choosen points
     for idx in indices:
+        # for the point get distance in x and y direction is should be moved
         dx = np.random.randint(-max_perturb, max_perturb + 1)
         dy = np.random.randint(-max_perturb, max_perturb + 1)
-        # Ensure perturbed[idx] is treated as a 2-element array for addition
+        # move the point
         perturbed[idx, 0] += dx 
         perturbed[idx, 1] += dy
 
-    # Create new mask
+    # Create new mask of all zeros
     new_mask = np.zeros_like(mask)
-    # Reshape perturbed for drawContours: needs to be (N, 1, 2)
+
+    # Reshape the changed array so it fits the expected shape of drawContours
     perturbed_reshaped = perturbed.reshape((-1, 1, 2)).astype(np.int32)
-    cv2.drawContours(new_mask, [perturbed_reshaped], -1, 1, thickness=cv2.FILLED) # Use cv2.FILLED for thickness=-1
+
+    # Create the new mask with the perturbed points.
+    cv2.drawContours(new_mask, [perturbed_reshaped], -1, 1, thickness=cv2.FILLED)
 
     return new_mask

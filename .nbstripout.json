@@ -1,7 +1,0 @@
-{
-  "remove_metadata_fields": [
-    "language_info.version",
-    "kernelspec"
-  ],
-  "keep_output": true
-}
